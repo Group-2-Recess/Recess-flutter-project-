@@ -1,10 +1,10 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:signup_and_login/Components/common/custom_form_button.dart';
-import 'package:signup_and_login/Components/common/page_header.dart';
-import 'package:signup_and_login/Components/common/page_heading.dart';
-import 'package:signup_and_login/Components/common/custom_input_field.dart';
-import 'Login.dart';
+import 'package:medical_reminder/Components/common/custom_form_button.dart';
+import 'package:medical_reminder/Components/common/custom_input_field.dart';
+import 'package:medical_reminder/Components/common/page_header.dart';
+import 'package:medical_reminder/Components/common/page_heading.dart';
+
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({Key? key}) : super(key: key);
