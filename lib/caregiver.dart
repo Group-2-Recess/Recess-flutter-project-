@@ -1,22 +1,18 @@
-import 'dart:typed_data'; 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:medical_reminder/utils.dart'; 
-import 'package:medical_reminder/resources/add.dart'; 
+import 'package:medical_reminder/utils.dart';
+import 'package:medical_reminder/Components/Screens/home_page.dart'; // Import the HomePage
 
 class CaregiverPage extends StatefulWidget {
   const CaregiverPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _CaregiverPageState createState() => _CaregiverPageState();
 }
 
 class _CaregiverPageState extends State<CaregiverPage> {
   final formKey = GlobalKey<FormState>();
-  String names = "";
-  String organisation = "";
-  String location = "";
   Uint8List? _image;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController organisationController = TextEditingController();
@@ -31,36 +27,14 @@ class _CaregiverPageState extends State<CaregiverPage> {
     }
   }
 
-  void saveProfile() async {
+  void saveProfile() {
     if (!formKey.currentState!.validate()) {
       return;
     }
 
-    if (_image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image')),
-      );
-      return;
-    }
-
-    String names = nameController.text;
-    String organisationName = organisationController.text;
-    String location = locationController.text;
-
-    String resp;
-    try {
-      resp = await StoreData().saveData(
-        names: names,
-        organisationName: organisationName,
-        location: location,
-        file: _image!,
-      );
-    } catch (e) {
-      resp = e.toString();
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(resp)),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
     );
   }
 
@@ -129,8 +103,8 @@ class _CaregiverPageState extends State<CaregiverPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
                     onPressed: saveProfile,
@@ -160,7 +134,6 @@ class _CaregiverPageState extends State<CaregiverPage> {
           }
           return null;
         },
-        onSaved: (value) => names = value ?? '',
       );
 
   Widget buildOrganisationName() => TextFormField(
@@ -177,7 +150,6 @@ class _CaregiverPageState extends State<CaregiverPage> {
           }
           return null;
         },
-        onSaved: (value) => organisation = value ?? '',
       );
 
   Widget buildLocation() => TextFormField(
@@ -194,6 +166,5 @@ class _CaregiverPageState extends State<CaregiverPage> {
           }
           return null;
         },
-        onSaved: (value) => location = value ?? '',
       );
 }
