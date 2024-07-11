@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'caregiver.dart';
-import 'patient_page.dart';
+
+import 'package:medical_reminder/Components/Screens/patient_profile.dart'; // Import the ProfilePage
 
 class SelectionPage extends StatelessWidget {
   const SelectionPage({Key? key}) : super(key: key);
@@ -58,7 +59,7 @@ class SelectionPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PatientPage()),
+                          builder: (context) => ProfilePage()), // Update this line
                     );
                   },
                   child: const Text('Are you a Patient?'),
