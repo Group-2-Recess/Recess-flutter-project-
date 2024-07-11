@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:signup_and_login/Components/common/custom_form_button.dart';
 import 'package:signup_and_login/Components/common/custom_input_field.dart';
 import 'package:signup_and_login/Components/common/page_header.dart';
@@ -18,22 +17,12 @@ class Signup extends StatefulWidget {
 class _SignupState extends State<Signup> {
   File? _profileImage;
   final _signupFormKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future _pickProfileImage() async {
-    try {
-      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (image == null) return;
 
-      final imageTemporary = File(image.path);
-      setState(() => _profileImage = imageTemporary);
-    } on PlatformException catch (e) {
-      debugPrint('Failed to pick image error: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,55 +43,9 @@ class _SignupState extends State<Signup> {
                   child: Column(
                     children: [
                       const PageHeading(title: 'Sign-up'),
-                      SizedBox(
-                        width: 130,
-                        height: 130,
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey.shade200,
-                          backgroundImage: _profileImage != null
-                              ? FileImage(_profileImage!)
-                              : null,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                bottom: 5,
-                                right: 5,
-                                child: GestureDetector(
-                                  onTap: _pickProfileImage,
-                                  child: Container(
-                                    height: 50,
-                                    width: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade400,
-                                      border: Border.all(
-                                          color: Colors.white, width: 3),
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_sharp,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+
                       const SizedBox(height: 16),
-                      CustomInputField(
-                        labelText: 'Name',
-                        hintText: 'Your name',
-                        isDense: true,
-                        controller: _nameController,
-                        validator: (textValue) {
-                          if (textValue == null || textValue.isEmpty) {
-                            return 'Name field is required!';
-                          }
-                          return null;
-                        },
-                      ),
+
                       const SizedBox(height: 16),
                       CustomInputField(
                         labelText: 'Email',
