@@ -11,11 +11,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: "your_api_key",
-      appId: "your_app_id",
-      messagingSenderId: "your_sender_id",
-      projectId: "your_project_id",
-      storageBucket: "your_storage_bucket",
+      apiKey: "AIzaSyCMeU0NysPEF_zf09VXRCKifZWOMNhhc1U",
+      appId: "1:564875037088:web:6aa8a55d90c535b12abcc5",
+      messagingSenderId: "564875037088",
+      projectId: "medical-reminder-app-8ce9e",
+      storageBucket: "medical-reminder-app-8ce9e.appspot.com",
     ),
   );
   runApp(const MyApp());

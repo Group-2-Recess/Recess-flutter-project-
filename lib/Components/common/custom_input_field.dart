@@ -31,7 +31,7 @@ class CustomInputField extends StatelessWidget {
           labelText: labelText,
           hintText: hintText,
           isDense: isDense,
-          suffixIcon: suffixIcon ? Icon(Icons.visibility) : null,
+          suffixIcon: suffixIcon ? const Icon(Icons.visibility) : null,
           border: const OutlineInputBorder(),
         ),
         validator: validator,
