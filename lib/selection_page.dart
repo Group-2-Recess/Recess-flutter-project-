@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'caregiver.dart'; // Adjust the import based on your file structure
+import 'caregiver.dart';
 import 'patient_page.dart';
 
 class SelectionPage extends StatelessWidget {
@@ -16,7 +16,9 @@ class SelectionPage extends StatelessWidget {
         children: [
           Image.network(
             'https://c8.alamy.com/comp/D91YB6/beautiful-medical-nurse-portrait-in-office-D91YB6.jpg',
-            fit: BoxFit.fill,
+            fit: BoxFit.cover,
+            color: Colors.black.withOpacity(0.5),
+            colorBlendMode: BlendMode.darken,
           ),
           Center(
             child: Column(
@@ -25,11 +27,18 @@ class SelectionPage extends StatelessWidget {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 12.0),
+                    textStyle: const TextStyle(fontSize: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CaregiverPage()),
+                      MaterialPageRoute(
+                          builder: (context) => const CaregiverPage()),
                     );
                   },
                   child: const Text('Are you a Caregiver/Nurse?'),
@@ -38,11 +47,18 @@ class SelectionPage extends StatelessWidget {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 12.0),
+                    textStyle: const TextStyle(fontSize: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const PatientPage()),
+                      MaterialPageRoute(
+                          builder: (context) => const PatientPage()),
                     );
                   },
                   child: const Text('Are you a Patient?'),

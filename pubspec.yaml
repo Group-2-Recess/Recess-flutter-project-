@@ -18,6 +18,14 @@ dependencies:
   firebase_storage: any
   firebase_auth: any
   firebase_messaging: any
+  flutter_local_notifications: ^9.2.0
+  timezone: ^0.8.0
+  intl: ^0.17.0 
+  sqflite: ^2.0.0+4
+  path_provider: ^2.0.14 
+  path: ^1.8.0
+  pdf: ^3.6.0
+  printing: ^5.9.5
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +47,7 @@ flutter:
   assets:
     - assets/images/friendship.png
     - assets/images/medication.png
+    - assets/images/nurse.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

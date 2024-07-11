@@ -4,7 +4,7 @@ import 'package:medical_reminder/Components/common/custom_form_button.dart';
 import 'package:medical_reminder/Components/common/custom_input_field.dart';
 import 'package:medical_reminder/Components/common/page_header.dart';
 import 'package:medical_reminder/Components/common/page_heading.dart';
-
+import 'package:medical_reminder/selection_page.dart';
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -20,8 +20,6 @@ class _SignupState extends State<Signup> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -34,16 +32,16 @@ class _SignupState extends State<Signup> {
               children: [
                 const PageHeader(),
                 Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const PageHeading(title: 'Sign-up'),
-
-                      const SizedBox(height: 16),
-
                       const SizedBox(height: 16),
                       CustomInputField(
                         labelText: 'Email',
@@ -94,10 +92,9 @@ class _SignupState extends State<Signup> {
                         onPressed: _handleSignupUser,
                       ),
                       const SizedBox(height: 18),
-                      SizedBox(
+                      Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Text(
                               'Already have an account? ',
@@ -139,6 +136,11 @@ class _SignupState extends State<Signup> {
     if (_signupFormKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Submitting data..')),
+      );
+      // Navigate to SelectionPage after submission
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SelectionPage()),
       );
     }
   }
