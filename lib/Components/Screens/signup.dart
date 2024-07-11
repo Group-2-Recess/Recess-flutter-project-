@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:signup_and_login/Components/common/custom_form_button.dart';
-import 'package:signup_and_login/Components/common/custom_input_field.dart';
-import 'package:signup_and_login/Components/common/page_header.dart';
-import 'package:signup_and_login/Components/common/page_heading.dart';
+import 'package:medical_reminder/Components/common/custom_form_button.dart';
+import 'package:medical_reminder/Components/common/custom_input_field.dart';
+import 'package:medical_reminder/Components/common/page_header.dart';
+import 'package:medical_reminder/Components/common/page_heading.dart';
+
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -15,7 +15,6 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
-  File? _profileImage;
   final _signupFormKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
