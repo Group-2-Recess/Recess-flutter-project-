@@ -12,10 +12,11 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.6
   email_validator: ^3.0.0
-  image_picker: any
+  
+  image_picker: 0.8.9
   firebase_core: ^3.2.0
-  cloud_firestore: any
-  firebase_storage: any
+  cloud_firestore: ^5.1.0
+  firebase_storage: ^12.1.1
   firebase_auth: any
   firebase_messaging: any
   flutter_local_notifications: ^9.2.0

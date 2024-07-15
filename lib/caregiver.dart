@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:medical_reminder/resources/add.dart';
 import 'package:medical_reminder/utils.dart';
-import 'package:medical_reminder/Components/Screens/home_page.dart'; // Import the HomePage
+import 'package:medical_reminder/Components/Screens/home_page.dart';
 
 class CaregiverPage extends StatefulWidget {
   const CaregiverPage({Key? key}) : super(key: key);
@@ -27,15 +28,52 @@ class _CaregiverPageState extends State<CaregiverPage> {
     }
   }
 
-  void saveProfile() {
+  void saveProfile() async {
     if (!formKey.currentState!.validate()) {
+      print("Form validation failed");
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-    );
+    if (_image == null) {
+      print("Image is null");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an image')),
+      );
+      return;
+    }
+
+    String names = nameController.text;
+    String organisationName = organisationController.text;
+    String location = locationController.text;
+
+    try {
+      print("Saving data...");
+
+      String resp = await StoreData().saveData(
+        names: names,
+        organisationName: organisationName,
+        location: location,
+        file: _image!,
+      );
+
+      if (resp == 'Success') {
+        print("Data saved successfully");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        print("Failed to save data: $resp");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save profile: $resp')),
+        );
+      }
+    } catch (e) {
+      print("Error saving data: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving profile: $e')),
+      );
+    }
   }
 
   @override
@@ -103,8 +141,7 @@ class _CaregiverPageState extends State<CaregiverPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
                     onPressed: saveProfile,

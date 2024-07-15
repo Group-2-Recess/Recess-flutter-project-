@@ -6,17 +6,17 @@ import 'package:medical_reminder/Components/Screens/login.dart';
 import 'package:medical_reminder/Components/Screens/signup.dart';
 import 'package:medical_reminder/selection_page.dart'; // Adjust this import
 import 'package:medical_reminder/patient_page.dart'; // Adjust this import
-import 'package:medical_reminder/caregiver.dart'; // Import CaregiverPage
+import 'package:medical_reminder/caregiver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: "YOUR_API_KEY",
-      appId: "YOUR_APP_ID",
-      messagingSenderId: "YOUR_SENDER_ID",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
+      apiKey: "AIzaSyCMeU0NysPEF_zf09VXRCKifZWOMNhhc1U",
+      appId: "medical-reminder-app-8ce9e",
+      messagingSenderId: "564875037088",
+      projectId: "medical-reminder-app-8ce9e",
+      storageBucket: "medical-reminder-app-8ce9e.appspot.com",
     ),
   );
   await _initializePathProvider(); // Initialize path_provider

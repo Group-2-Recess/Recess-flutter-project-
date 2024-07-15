@@ -25,6 +25,12 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>photo libray usage</string>
+	<key>NSCameraUsageDescription</key>
+	<string>camera usage</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>microphone usage</string>
 	<string>1:564875037088:ios:082ad80b0097b45f2abcc5</string>
 </dict>
 </plist>

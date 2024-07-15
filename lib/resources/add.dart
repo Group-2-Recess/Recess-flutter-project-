@@ -31,9 +31,10 @@ class StoreData {
           'location': location,
           'imagelink': imageUrl,
         });
-        resp = "Success";
+        resp = "Success"; // Ensure consistent response
       }
     } catch (err) {
+      print("Error saving data: $err");
       resp = err.toString();
     }
     return resp;
