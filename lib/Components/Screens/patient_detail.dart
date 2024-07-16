@@ -1,18 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/patient.dart';
-import 'medication_detail.dart';
+import 'package:medical_reminder/firestore_service.dart';
+import 'package:medical_reminder/models/medication.dart';
+import 'medication_detail.dart'; // Import your MedicationDetailPage
 
 class PatientDetailPage extends StatefulWidget {
+  final Patient patient;
+
+  PatientDetailPage({required this.patient});
+
   @override
   _PatientDetailPageState createState() => _PatientDetailPageState();
 }
 
 class _PatientDetailPageState extends State<PatientDetailPage> {
-  final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String _location = '';
-  String _gender = 'Male'; // Default value
-  String _doctor = '';
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late String _name;
+  late String _location;
+  late String _gender;
+  late String _doctor;
+  late List<Medication> _medications; // Updated to hold Medication objects
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  void initState() {
+    super.initState();
+    _name = widget.patient.name ?? ''; // Use existing name if present
+    _location =
+        widget.patient.location ?? ''; // Use existing location if present
+    _gender = widget.patient.gender ?? ''; // Use existing gender if present
+    _doctor = widget.patient.doctor ?? ''; // Use existing doctor if present
+    _medications = List.from(widget.patient.medications ?? []);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,167 +56,97 @@ class _PatientDetailPageState extends State<PatientDetailPage> {
                 ),
               ),
               SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.teal),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the name';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _name = value!;
-                  },
-                ),
+              TextFormField(
+                initialValue: _name,
+                decoration: InputDecoration(labelText: 'Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _name = value!;
+                },
               ),
               SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    prefixIcon: Icon(Icons.location_on),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.teal),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the location';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _location = value!;
-                  },
-                ),
+              TextFormField(
+                initialValue: _location,
+                decoration: InputDecoration(labelText: 'Location'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the location';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _location = value!;
+                },
               ),
               SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: _gender,
-                  decoration: InputDecoration(
-                    labelText: 'Gender',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.teal),
-                    ),
-                  ),
-                  items: <String>['Male', 'Female'].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _gender = newValue!;
-                    });
-                  },
-                ),
+              TextFormField(
+                initialValue: _gender,
+                decoration: InputDecoration(labelText: 'Gender'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the gender';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _gender = value!;
+                },
               ),
               SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Doctor',
-                    prefixIcon: Icon(Icons.local_hospital),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.teal),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the doctor\'s name';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _doctor = value!;
-                  },
-                ),
+              TextFormField(
+                initialValue: _doctor,
+                decoration: InputDecoration(labelText: 'Doctor'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the doctor';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _doctor = value!;
+                },
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32), // Ensure proper spacing before the button
               Center(
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      Patient newPatient = Patient(
+
+                      // Ensure the patient has an ID
+                      String patientId = widget.patient.id.isNotEmpty
+                          ? widget.patient.id
+                          : _firestoreService.generateId();
+
+                      Patient updatedPatient = Patient(
+                        id: patientId,
                         name: _name,
                         location: _location,
                         gender: _gender,
                         doctor: _doctor,
-                        medications: [], // Provide an empty list of medications
+                        medications: _medications, // Updated medications list
+                        verificationRecords: widget.patient.verificationRecords,
                       );
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              MedicationDetailPage(patient: newPatient),
-                        ),
-                      ).then((result) {
-                        if (result != null) {
-                          Navigator.pop(context, result);
-                        }
+
+                      // Save updated patient to Firestore using FirestoreService
+                      _firestoreService.savePatient(updatedPatient).then((_) {
+                        print('Patient updated in Firestore');
+                        // Navigate to MedicationDetailPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MedicationDetailPage(patient: updatedPatient),
+                          ),
+                        );
+                      }).catchError((error) {
+                        print('Error updating patient in Firestore: $error');
+                        // Handle error
                       });
                     }
                   },

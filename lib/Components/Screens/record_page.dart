@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-
-import 'package:medical_reminder/database_helper.dart';
+import 'package:medical_reminder/firestore_service.dart';
 
 class RecordPage extends StatefulWidget {
+  final String patientId;
   final String patientName;
 
-  RecordPage({required this.patientName});
+  RecordPage({required this.patientId, required this.patientName});
 
   @override
   _RecordPageState createState() => _RecordPageState();
 }
 
 class _RecordPageState extends State<RecordPage> {
-  List<Map<String, dynamic>> records = [];
+  final FirestoreService firestoreService = FirestoreService();
+  List<Map<String, dynamic>> _records = [];
 
   @override
   void initState() {
@@ -23,54 +25,15 @@ class _RecordPageState extends State<RecordPage> {
     _fetchRecords();
   }
 
-  void _fetchRecords() async {
+  Future<void> _fetchRecords() async {
     try {
-      final dbHelper = DatabaseHelper.instance;
-      final fetchedRecords =
-          await dbHelper.queryRecordsByPatient(widget.patientName);
+      final records =
+          await firestoreService.getPatientRecords(widget.patientId);
       setState(() {
-        records = fetchedRecords;
+        _records = records;
       });
     } catch (e) {
-      print("Error fetching records: $e");
-    }
-  }
-
-  Future<void> _generatePdf() async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text('Records for ${widget.patientName}',
-                  style: pw.TextStyle(fontSize: 24)),
-              pw.SizedBox(height: 20),
-              pw.Table.fromTextArray(
-                headers: ['Medication Name', 'Time', 'Date', 'Taken'],
-                data: records.map((record) {
-                  return [
-                    record['medicationName'],
-                    record['time'],
-                    record['date'],
-                    record['taken'] == 1 ? 'Yes' : 'No',
-                  ];
-                }).toList(),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    try {
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-      );
-    } catch (e) {
-      print("Error generating PDF: $e");
+      print('Error fetching records: $e');
     }
   }
 
@@ -83,65 +46,67 @@ class _RecordPageState extends State<RecordPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.picture_as_pdf),
-            onPressed: _generatePdf,
+            onPressed: _generatePDF,
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: records.isEmpty
-            ? Center(
-                child: Text(
-                  'No records found for ${widget.patientName}.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+      body: _records.isEmpty
+          ? Center(child: Text('No records found.'))
+          : ListView.builder(
+              itemCount: _records.length,
+              itemBuilder: (context, index) {
+                final record = _records[index];
+                return ListTile(
+                  title: Text(record['medicationName']),
+                  subtitle: Text(
+                    'Time: ${record['time']} '
+                    'Date: ${_formatDate(record['date'])} '
+                    'Taken: ${record['taken'] == 'true' ? 'Yes' : 'No'}',
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return '';
+    final date = DateTime.parse(dateString);
+    return DateFormat.yMMMd().format(date); // Format as MMM d, yyyy
+  }
+
+  void _generatePDF() async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.ListView.builder(
+            itemCount: _records.length,
+            itemBuilder: (context, index) {
+              final record = _records[index];
+              return pw.Container(
+                padding: pw.EdgeInsets.all(8),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('Medication Name: ${record['medicationName']}'),
+                    pw.Text('Time: ${record['time']}'),
+                    pw.Text('Date: ${_formatDate(record['date'])}'),
+                    pw.Text(
+                        'Taken: ${record['taken'] == 'true' ? 'Yes' : 'No'}'),
+                    pw.Divider(),
+                  ],
                 ),
-              )
-            : ListView.builder(
-                itemCount: records.length,
-                itemBuilder: (context, index) {
-                  final record = records[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 10),
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16),
-                      leading: Icon(
-                        Icons.medical_services,
-                        color: Colors.teal,
-                      ),
-                      title: Text(
-                        record['medicationName'],
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 5),
-                          Text(
-                            'Time: ${record['time']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            'Date: ${record['date']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            'Taken: ${record['taken'] == 1 ? 'Yes' : 'No'}',
-                            style: TextStyle(
-                                fontSize: 16,
-                                color: record['taken'] == 1
-                                    ? Colors.green
-                                    : Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              );
+            },
+          );
+        },
       ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
     );
   }
 }

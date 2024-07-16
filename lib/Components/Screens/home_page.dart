@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'patient_list.dart'; // Import your PatientListPage
+import 'patient_list.dart'; // Adjust path as per your project structure
+import 'package:medical_reminder/firestore_service.dart'; // Adjust path as per your project structure
 
 class HomePage extends StatelessWidget {
+  final FirestoreService firestoreService = FirestoreService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[50], // Faint pink background color
+      backgroundColor: Colors.pink[50],
       appBar: AppBar(
         title: Text('Home'),
       ),
@@ -18,15 +21,14 @@ class HomePage extends StatelessWidget {
               height: 250,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(
-                      'assets/images/nurse.jpeg'), // Ensure this path is correct
+                  image: AssetImage('assets/images/nurse.jpeg'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
             SizedBox(height: 20),
             Text(
-              'Welcome to Pill Reminder App!', // App name
+              'Welcome to Pill Reminder App!',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -35,7 +37,7 @@ class HomePage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              'Never miss a med', // Subtitle
+              'Never miss a med',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.blueAccent,
@@ -52,7 +54,8 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => PatientListPage()),
+                          builder: (context) => PatientListPage(),
+                        ),
                       );
                     },
                     child: Text('View Patients'),
@@ -60,7 +63,6 @@ class HomePage extends StatelessWidget {
                       padding:
                           EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                       textStyle: TextStyle(fontSize: 18),
-                      // Optional: You can customize button colors here
                     ),
                   ),
                 ],
