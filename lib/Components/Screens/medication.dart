@@ -14,9 +14,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.pink,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textTheme: TextTheme(
-          bodyText1: TextStyle(fontFamily: 'Roboto', fontSize: 16.0),
-          bodyText2: TextStyle(fontFamily: 'Roboto', fontSize: 14.0),
-          headline6: TextStyle(
+          bodyLarge: TextStyle(fontFamily: 'Roboto', fontSize: 16.0),
+          bodyMedium: TextStyle(fontFamily: 'Roboto', fontSize: 14.0),
+          titleLarge: TextStyle(
             fontFamily: 'Roboto',
             fontSize: 20.0,
             fontWeight: FontWeight.bold,

@@ -7,25 +7,28 @@ import 'package:medical_reminder/Components/Screens/signup.dart';
 import 'package:medical_reminder/selection_page.dart';
 import 'package:medical_reminder/patient_page.dart';
 import 'package:medical_reminder/caregiver.dart';
-import 'package:medical_reminder/Components/Screens/patient_profile.dart';
+
 import 'package:medical_reminder/Components/Screens/user_details_form.dart';
 import 'package:medical_reminder/Components/Screens/prescription_details_page.dart';
-import 'package:medical_reminder/Components/Screens/reminder_page.dart';
+import 'package:medical_reminder/Components/Screens/set_reminder.dart';
 import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/models/medication.dart';
 import 'package:medical_reminder/notification_service.dart';
-import 'set_reminder.dart';
+import 'package:medical_reminder/firestore_service.dart';
+import 'package:medical_reminder/models/verification_record.dart';
+import 'package:uuid/uuid.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: "YOUR_API_KEY",
-      appId: "YOUR_APP_ID",
-      messagingSenderId: "YOUR_SENDER_ID",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-    ),
+        apiKey: "AIzaSyCMeU0NysPEF_zf09VXRCKifZWOMNhhc1U",
+        authDomain: "medical-reminder-app-8ce9e.firebaseapp.com",
+        projectId: "medical-reminder-app-8ce9e",
+        storageBucket: "medical-reminder-app-8ce9e.appspot.com",
+        messagingSenderId: "564875037088",
+        appId: "1:564875037088:web:6aa8a55d90c535b12abcc5",
+        measurementId: "G-W8LTEGW3DR"),
   );
   await _initializePathProvider(); // Initialize path_provider
   runApp(const MyApp());
@@ -56,10 +59,62 @@ class MyApp extends StatelessWidget {
         '/caregiver': (context) => const CaregiverPage(),
         '/user-details-form': (context) => UserDetailsForm(),
         '/prescription-details': (context) => PrescriptionDetailsPage(),
-        '/reminder': (context) => ReminderPage(),
       },
     );
   }
+}
+
+Future<void> _testFirestore() async {
+  // Example VerificationRecord
+  VerificationRecord verificationRecord = VerificationRecord(
+    patientName: 'John Doe',
+    medicationName: 'FluMed',
+    time: DateTime.now(),
+    taken: true,
+  );
+
+  // Example Medication
+  Medication medication = Medication(
+    id: Uuid().v4(),
+    sicknessName: 'Flu',
+    medicationName: 'FluMed',
+    prescription: 'Take one pill every 8 hours',
+    alarms: [
+      MedicationTime(hour: 8, minute: 0),
+      MedicationTime(hour: 16, minute: 0),
+      MedicationTime(hour: 0, minute: 0),
+    ],
+    isVerified: true,
+    verificationDate: DateTime.now(),
+  );
+
+  // Example Patient
+  Patient patient = Patient(
+    id: 'patientId',
+    name: 'John Doe',
+    location: '',
+    gender: '',
+    doctor: '',
+    medications: [medication],
+    verificationRecords: [verificationRecord],
+  );
+
+  // Create an instance of FirebaseService
+  FirestoreService firebaseService = FirestoreService();
+
+  // Save the patient to Firestore using FirebaseService instance
+  await firebaseService.savePatient(patient);
+
+  // Fetch the patient from Firestore using FirebaseService instance
+  Patient fetchedPatient = await firebaseService.getPatient('patientId');
+  print(fetchedPatient.name); // Should print 'John Doe'
+
+  // Add medication with auto-generated ID using FirebaseService instance
+  await firebaseService.addMedicationWithAutoId('patientId', medication);
+
+  // Add medication with custom document ID using FirebaseService instance
+  await firebaseService.addMedicationWithCustomId(
+      'patientId', 'customMedId', medication);
 }
 
 class MedicationDetailPage extends StatefulWidget {
@@ -108,6 +163,8 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
       gender: widget.patient.gender,
       doctor: widget.patient.doctor,
       medications: medications,
+      id: '',
+      verificationRecords: [],
     );
 
     // Save patient data and navigate back
@@ -143,7 +200,8 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
     final title = 'Medication Reminder';
     final body = 'Time to take $medicationName!';
 
-    await _notificationService.scheduleNotification(hour, minute, title, body);
+    await _notificationService.scheduleNotification(
+        hour as String, minute as String, title, body);
   }
 
   @override
@@ -185,10 +243,13 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     Medication newMedication = Medication(
-                      sicknessName: _sicknessName,
-                      medicationName: _medicationName,
-                      prescription: _prescription,
+                      sicknessName: '',
+                      medicationName: '',
+                      prescription: '',
                       alarms: [],
+                      isVerified: false,
+                      verificationDate: DateTime.now(),
+                      id: '',
                     );
                     setState(() {
                       medications.add(newMedication);

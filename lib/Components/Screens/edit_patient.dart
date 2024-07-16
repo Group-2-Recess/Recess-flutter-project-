@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/models/medication.dart';
+import 'package:medical_reminder/firestore_service.dart';
+import 'package:uuid/uuid.dart';
 
 class EditPatientPage extends StatefulWidget {
   final Patient patient;
@@ -19,6 +21,8 @@ class _EditPatientPageState extends State<EditPatientPage> {
   late TextEditingController _doctorController;
   List<Medication> _medications = [];
 
+  final FirestoreService _firebaseService = FirestoreService();
+
   @override
   void initState() {
     super.initState();
@@ -32,10 +36,13 @@ class _EditPatientPageState extends State<EditPatientPage> {
   void _addNewMedication() {
     setState(() {
       _medications.add(Medication(
+        id: Uuid().v4(),
         sicknessName: '',
         medicationName: '',
         prescription: '',
         alarms: [],
+        isVerified: false,
+        verificationDate: DateTime.now(),
       ));
     });
   }
@@ -44,6 +51,28 @@ class _EditPatientPageState extends State<EditPatientPage> {
     setState(() {
       _medications.removeAt(index);
     });
+  }
+
+  Future<void> _saveChanges() async {
+    final updatedPatient = Patient(
+      id: widget.patient.id,
+      name: _nameController.text,
+      location: _locationController.text,
+      gender: _genderController.text,
+      doctor: _doctorController.text,
+      medications: _medications,
+      verificationRecords: [], // Adjust as needed
+    );
+
+    try {
+      await _firebaseService.updatePatient(updatedPatient);
+      widget.onSave(updatedPatient);
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save changes: $e')),
+      );
+    }
   }
 
   @override
@@ -154,27 +183,16 @@ class _EditPatientPageState extends State<EditPatientPage> {
                             },
                           ),
                           ElevatedButton(
-                            onPressed: () async {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.now(),
-                              );
-                              if (time != null) {
-                                setState(() {
-                                  _medications[index].alarms.add(time);
-                                });
-                              }
+                            onPressed: () {
+                              _addAlarm(index);
                             },
                             child: Text('Add Alarm'),
                           ),
-                          SizedBox(height: 10),
                           ElevatedButton(
-                            onPressed: () => _deleteMedication(index),
+                            onPressed: () {
+                              _deleteMedication(index);
+                            },
                             child: Text('Delete Medication'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 224, 100, 91),
-                            ),
                           ),
                         ],
                       ),
@@ -185,22 +203,11 @@ class _EditPatientPageState extends State<EditPatientPage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _addNewMedication,
-                child: Text('Add Medication'),
+                child: Text('Add New Medication'),
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  final updatedPatient = Patient(
-                    id: widget.patient.id,
-                    name: _nameController.text,
-                    location: _locationController.text,
-                    gender: _genderController.text,
-                    doctor: _doctorController.text,
-                    medications: _medications,
-                  );
-                  widget.onSave(updatedPatient);
-                  Navigator.pop(context);
-                },
+                onPressed: _saveChanges,
                 child: Text('Save Changes'),
               ),
             ],
@@ -208,5 +215,32 @@ class _EditPatientPageState extends State<EditPatientPage> {
         ),
       ),
     );
+  }
+
+  void _addAlarm(int medicationIndex) async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _medications[medicationIndex].alarms.add(
+              MedicationTime(
+                hour: picked.hour,
+                minute: picked.minute,
+              ),
+            );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _locationController.dispose();
+    _genderController.dispose();
+    _doctorController.dispose();
+    super.dispose();
   }
 }

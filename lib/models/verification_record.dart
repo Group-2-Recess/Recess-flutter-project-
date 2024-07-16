@@ -1,15 +1,31 @@
-import 'package:flutter/material.dart';
-
 class VerificationRecord {
-  final DateTime date;
-  final String status; // Added status field
-  final String medicationName;
-  final TimeOfDay alarm;
+  String patientName;
+  String medicationName;
+  DateTime time;
+  bool taken;
 
   VerificationRecord({
-    required this.date,
-    required this.status,
+    required this.patientName,
     required this.medicationName,
-    required this.alarm,
+    required this.time,
+    required this.taken,
   });
+
+  factory VerificationRecord.fromJson(Map<String, dynamic> json) {
+    return VerificationRecord(
+      patientName: json['patientName'],
+      medicationName: json['medicationName'],
+      time: DateTime.parse(json['time']),
+      taken: json['taken'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'patientName': patientName,
+      'medicationName': medicationName,
+      'time': time.toIso8601String(),
+      'taken': taken,
+    };
+  }
 }

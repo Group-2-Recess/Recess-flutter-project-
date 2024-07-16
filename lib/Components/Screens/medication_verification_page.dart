@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:medical_reminder/firestore_service.dart';
 import 'package:intl/intl.dart';
-import 'package:medical_reminder/database_helper.dart';
 
 class MedicationVerificationPage extends StatelessWidget {
+  final String patientId;
   final String patientName;
   final String patientGender;
   final String medicationName;
@@ -10,12 +11,15 @@ class MedicationVerificationPage extends StatelessWidget {
   final bool taken;
 
   MedicationVerificationPage({
+    required this.patientId,
     required this.patientName,
     required this.patientGender,
     required this.medicationName,
     required this.time,
     required this.taken,
   });
+
+  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -57,33 +61,32 @@ class MedicationVerificationPage extends StatelessWidget {
     return DateFormat.jm().format(dateTime);
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat.yMMMd().format(date);
-  }
-
   Future<void> _saveVerification(BuildContext context) async {
-    final dbHelper = DatabaseHelper.instance;
     try {
-      await dbHelper.insertRecord({
+      String formattedTime = _formatTimeOfDay(time);
+      String formattedDate = _formatDate(DateTime.now());
+
+      // Constructing the verification record data as Map<String, String>
+      Map<String, String> verificationData = {
         'patientName': patientName,
         'gender': patientGender,
         'medicationName': medicationName,
-        'time': _formatTimeOfDay(time),
-        'date': _formatDate(DateTime.now()),
-        'taken': taken ? 1 : 0,
-      });
+        'time': formattedTime,
+        'date': DateTime.now().toIso8601String(), // Save date in ISO format
+        'taken': taken.toString(),
+      };
 
-      // If the insert is successful, print a message
-      print('Verification record saved successfully');
+      await _firestoreService.saveMedicationVerification(
+          patientId, verificationData);
 
-      Navigator.pop(context); // Close the verification page after saving
+      Navigator.pop(context, true); // Return true to indicate success
     } catch (e) {
-      print('Error inserting record: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save verification. Please try again.'),
-        ),
-      );
+      print('Error saving verification: $e');
+      Navigator.pop(context, false); // Return false to indicate failure
     }
+  }
+
+  String _formatDate(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 }
