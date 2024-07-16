@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:medical_reminder/models/profilemodel.dart';
+import 'dart:typed_data'; // For image byte data
+import 'user_details_form.dart'; // Ensure this is the correct path to UserDetailsForm
+
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -15,14 +16,17 @@ class _ProfilePageState extends State<ProfilePage> {
   String _firstName = '';
   String _lastName = '';
   DateTime? _dateOfBirth;
-  File? _profileImage;
+  Uint8List? _profileImage; // Change to Uint8List for Flutter Web
+  String? _profileImageUrl; // URL for displaying the image
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes(); // Use readAsBytes for async operation
       setState(() {
-        _profileImage = File(pickedFile.path);
+        _profileImage = bytes;
+        _profileImageUrl = null; // Reset the profile image URL
       });
     }
   }
@@ -41,35 +45,51 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String> _uploadProfileImage(File image) async {
-    final storageRef =
-        FirebaseStorage.instance.ref().child('profile_images/${DateTime.now().toString()}');
-    final uploadTask = storageRef.putFile(image);
+  Future<String> _uploadProfileImage(Uint8List image) async {
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('profile_images/${DateTime.now().toString()}');
+    final uploadTask = storageRef.putData(image);
     final snapshot = await uploadTask;
     return await snapshot.ref.getDownloadURL();
   }
 
   Future<void> _saveProfile() async {
-    if (_profileImage != null) {
-      String imageUrl = await _uploadProfileImage(_profileImage!);
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      if (_profileImage != null && _dateOfBirth != null) {
+        String imageUrl;
+        try {
+          imageUrl = await _uploadProfileImage(_profileImage!);
+        } catch (error) {
+          // Handle image upload error (e.g., display a snackbar)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error uploading profile image: $error")),
+          );
+          return;
+        }
 
-      PatientProfile profile = PatientProfile(
-        id: FirebaseFirestore.instance.collection('profiles').doc().id,
-        firstName: _firstName,
-        lastName: _lastName,
-        dateOfBirth: _dateOfBirth!,
-        profileImageUrl: imageUrl,
-      );
+        // Create a document reference for the user profile
+        final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc();
 
-      await FirebaseFirestore.instance.collection('profiles').doc(profile.id).set(profile.toMap());
-      
-      // Navigate to CongratulationsPage and pass profile details
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CongratulationsPage(profile: profile),
-        ),
-      );
+        // Save profile data
+        await userRef.set({
+          'id': userRef.id,  // Use the document ID as profile ID
+          'firstName': _firstName,
+          'lastName': _lastName,
+          'dateOfBirth': Timestamp.fromDate(_dateOfBirth!),
+          'profileImageUrl': imageUrl,
+        });
+
+        // Navigate to congratulations page after successful save
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => UserDetailsForm()));
+      } else {
+        // Handle case where no profile image is selected or date of birth is not set
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select a profile image and date of birth.")),
+        );
+      }
     }
   }
 
@@ -82,10 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0.0,
         title: Text(
           'Create Your Patient Profile',
-          style: TextStyle(
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -95,13 +112,6 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 20.0),
-                Image.asset(
-                  'assets/images/blackman.jpg',
-                  width: double.infinity,
-                  height: 200.0,
-                  fit: BoxFit.cover,
-                ),
                 SizedBox(height: 20.0),
                 Form(
                   key: _formKey,
@@ -115,10 +125,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         onSaved: (value) => _firstName = value!,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Please enter your first name' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please enter your first name'
+                            : null,
                       ),
-                      SizedBox(height: 10.0),
+                      SizedBox(height: 20.0),
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'Last Name',
@@ -127,105 +138,51 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         onSaved: (value) => _lastName = value!,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Please enter your last name' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please enter your last name'
+                            : null,
                       ),
-                      SizedBox(height: 10.0),
+                      SizedBox(height: 20.0),
                       TextFormField(
-                        readOnly: true,
+                        controller: TextEditingController(
+                          text: _dateOfBirth != null
+                              ? "${_dateOfBirth!.year}-${_dateOfBirth!.month}-${_dateOfBirth!.day}"
+                              : '',
+                        ),
                         decoration: InputDecoration(
                           labelText: 'Date of Birth',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.calendar_today),
-                            onPressed: () => _selectDate(context),
-                          ),
                         ),
+                        readOnly: true,
                         onTap: () => _selectDate(context),
-                        validator: (value) =>
-                            _dateOfBirth == null ? 'Please select your date of birth' : null,
-                        controller: TextEditingController(
-                          text: _dateOfBirth == null
-                              ? ''
-                              : "${_dateOfBirth!.toLocal()}".split(' ')[0],
-                        ),
+                        validator: (value) => _dateOfBirth == null
+                            ? 'Please select your date of birth'
+                            : null,
                       ),
                       SizedBox(height: 20.0),
                       GestureDetector(
                         onTap: _pickImage,
                         child: CircleAvatar(
-                          radius: 40.0,
-                          backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-                          child: _profileImage == null ? Icon(Icons.add_a_photo) : null,
+                          radius: 60,
+                          backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
+                          child: _profileImage == null
+                              ? Icon(Icons.camera_alt, size: 50)
+                              : null,
                         ),
                       ),
                       SizedBox(height: 20.0),
                       ElevatedButton(
-                        onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
-                            _formKey.currentState!.save();
-                            await _saveProfile();
-                          }
-                        },
-                        child: Text('Submit'),
+                        onPressed: _saveProfile,
+                        child: Text('Save Profile'),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 20.0),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class CongratulationsPage extends StatelessWidget {
-  final PatientProfile profile;
-
-  CongratulationsPage({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Congratulations'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Congratulations! Your profile has been created.',
-              style: TextStyle(fontSize: 24),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'First Name: ${profile.firstName}',
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              'Last Name: ${profile.lastName}',
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              'Date of Birth: ${profile.dateOfBirth}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate back to ProfilePage
-                Navigator.pop(context);
-              },
-              child: Text('Back to Profile'),
-            ),
-          ],
         ),
       ),
     );

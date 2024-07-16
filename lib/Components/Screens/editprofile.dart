@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
-  final String firstName;
-  final String lastName;
-  final DateTime? dateOfBirth;
-  final String? profileImagePath; // Assuming profile picture path is stored
+  final String userId; // Pass user ID to fetch their data
 
-  const ProfilePage({
-    super.key,
-    required this.firstName,
-    required this.lastName,
-    required this.dateOfBirth,
-    this.profileImagePath,
-  });
+  const ProfilePage({super.key, required this.userId});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -30,10 +22,21 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _firstName = widget.firstName;
-    _lastName = widget.lastName;
-    _dateOfBirth = widget.dateOfBirth;
-    _profileImage = widget.profileImagePath != null ? File(widget.profileImagePath!) : null;
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc(widget.userId);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      setState(() {
+        _firstName = doc['firstName'] ?? '';
+        _lastName = doc['lastName'] ?? '';
+        _dateOfBirth = (doc['dateOfBirth'] as Timestamp).toDate();
+        _profileImage = doc['profileImagePath'] != null ? File(doc['profileImagePath']) : null;
+      });
+    }
   }
 
   Future<void> _pickImage() async {
@@ -60,13 +63,19 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void updateProfileData(String firstName, String lastName, DateTime? dateOfBirth, File? profileImage) {
-    // Implement your logic to update profile data here (e.g., database call)
-    print("Updating profile data: ");
-    print("First Name: $firstName");
-    print("Last Name: $lastName");
-    print("Date of Birth: ${dateOfBirth?.toIso8601String()}");
-    // Handle profile image update logic (if applicable)
+  Future<void> updateProfileData() async {
+    final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc(widget.userId);
+    
+    await userRef.update({
+      'firstName': _firstName,
+      'lastName': _lastName,
+      'dateOfBirth': Timestamp.fromDate(_dateOfBirth!),
+      // Handle profile image path update logic if applicable
+      // 'profileImagePath': _profileImage?.path,
+    });
+
+    // Optionally show a confirmation message
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Profile updated successfully!")));
   }
 
   @override
@@ -153,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             _formKey.currentState!.save();
-                            updateProfileData(_firstName, _lastName, _dateOfBirth, _profileImage);
+                            updateProfileData();
                           }
                         },
                         child: Text('Save Changes'),
@@ -172,11 +181,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
 void main() {
   runApp(MaterialApp(
-    home: ProfilePage(
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: DateTime(1990, 5, 15),
-      profileImagePath: null,
-    ),
+    home: ProfilePage(userId: 'USER_ID'), // Pass the user ID here
   ));
 }
