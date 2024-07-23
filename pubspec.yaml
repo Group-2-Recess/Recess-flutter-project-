@@ -1,0 +1,76 @@
+name: medical_reminder
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  email_validator: ^3.0.0
+  image_picker: ^0.8.9
+  firebase_core: ^3.2.0  # Updated version
+  cloud_firestore: ^5.1.0
+  firebase_storage: ^12.1.1
+  firebase_auth: ^5.1.0
+  firebase_messaging: ^15.0.3  # Updated version
+  flutter_local_notifications: ^9.2.0
+  timezone: ^0.8.0
+  intl: ^0.19.0
+  sqflite: ^2.0.0+4
+  path_provider: ^2.0.14
+  pdf: ^3.6.0
+  printing: ^5.9.5
+  provider: ^6.0.0
+  flutter_datetime_picker: ^1.5.1
+  font_awesome_flutter: ^10.1.0
+  table_calendar: ^3.1.2
+  uuid: ^3.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/caregiver1.jpg
+    - assets/images/doctor1.jpg
+    - assets/images/medicine1.jpg
+    - assets/images/medicine2.jpg
+    - assets/images/medicine3.jpg
+    - assets/images/friendship.png
+    - assets/images/medication.png
+    - assets/images/nurse.jpeg
+    - assets/images/blackman.jpg
+
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Roboto-BoldItalic.ttf
+          style: italic
+          weight: 700
+        - asset: assets/fonts/Roboto-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Roboto-LightItalic.ttf
+          style: italic
+          weight: 300
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-MediumItalic.ttf
+          style: italic
+          weight: 500
+        - asset: assets/fonts/Roboto-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Roboto-ThinItalic.ttf
+          style: italic
+          weight: 100
