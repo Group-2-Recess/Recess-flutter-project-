@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:medical_reminder/Components/Screens/forgotPassword.dart';
+import 'package:medical_reminder/firebase_options.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 import 'package:medical_reminder/Components/Screens/signup.dart';
 import 'package:medical_reminder/selection_page.dart';
@@ -27,6 +27,7 @@ void main() async {
       messagingSenderId: "564875037088",
       appId: "1:564875037088:web:6aa8a55d90c535b12abcc5",
       measurementId: "G-W8LTEGW3DR",
+
     ),
   );
   runApp(const MyApp());
@@ -39,11 +40,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const Login(),
+      home: Login(),
       routes: {
-        '/login': (context) => const Login(),
-        '/signup': (context) => const Signup(),
-        '/forgot-password': (context) => const ForgotPassword(),
+        '/login': (context) => Login(),
+        '/signup': (context) => Signup(),
         '/patient': (context) => const PatientPage(),
         '/selection': (context) => const SelectionPage(),
         '/caregiver': (context) => const CaregiverPage(),
