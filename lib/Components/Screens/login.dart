@@ -3,7 +3,7 @@ import 'package:medical_reminder/services/auth_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medical_reminder/selection_page.dart';
+import 'package:medical_reminder/Components/Screens/home_page.dart';
 
 class Login extends StatelessWidget {
   Login({super.key});
@@ -149,7 +149,8 @@ class Login extends StatelessWidget {
         if (isAuthenticated) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => SelectionPage()),
+            MaterialPageRoute(builder: (context) => HomePage(),
+            )
           );
         } else {
           // Handle authentication failure (e.g., show a message)

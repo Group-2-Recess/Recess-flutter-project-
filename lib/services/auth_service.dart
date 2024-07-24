@@ -1,11 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
-import 'package:medical_reminder/Components/Screens/home.dart';
+import 'package:medical_reminder/Components/Screens/home_page.dart';
+import 'package:medical_reminder/selection_page.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 
 class AuthService {
+  // Example list of medications
+  final List<String> medications = [
+    'Medication 1',
+    'Medication 2',
+    'Medication 3'
+  ];
+
   Future<void> signup({
     required String email,
     required String password,
@@ -21,7 +28,7 @@ class AuthService {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (BuildContext context) => Login() // Navigate to Login page
+              builder: (BuildContext context) => SelectionPage() // Navigate to Selection Page
           )
       );
       Fluttertoast.showToast(
@@ -67,7 +74,7 @@ class AuthService {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (BuildContext context) => const Home()
+              builder: (BuildContext context) => HomePage() // Pass medications list
           )
       );
       return true;
