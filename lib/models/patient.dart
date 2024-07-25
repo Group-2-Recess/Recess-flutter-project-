@@ -4,6 +4,7 @@ import 'verification_record.dart';
 
 class Patient {
   String id;
+  String userId; // Added userId
   String name;
   String location;
   String gender;
@@ -13,6 +14,7 @@ class Patient {
 
   Patient({
     required this.id,
+    required this.userId, // Added userId
     required this.name,
     required this.location,
     required this.gender,
@@ -25,6 +27,7 @@ class Patient {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Patient(
       id: doc.id,
+      userId: data['userId'] ?? '', // Added userId
       name: data['name'] ?? '',
       location: data['location'] ?? '',
       gender: data['gender'] ?? '',
@@ -40,6 +43,7 @@ class Patient {
 
   Map<String, dynamic> toJson() {
     return {
+      'userId': userId, // Added userId
       'name': name,
       'location': location,
       'gender': gender,
@@ -53,6 +57,7 @@ class Patient {
   static Patient empty() {
     return Patient(
       id: '',
+      userId: '', // Added userId
       name: '',
       location: '',
       gender: '',

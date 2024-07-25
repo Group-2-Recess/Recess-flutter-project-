@@ -9,6 +9,7 @@ enum VerificationStatus {
 
 class Medication {
   String id;
+  String userId; // Added userId
   String sicknessName;
   String medicationName;
   String prescription;
@@ -18,6 +19,7 @@ class Medication {
 
   Medication({
     required this.id,
+    required this.userId, // Added userId
     required this.sicknessName,
     required this.medicationName,
     required this.prescription,
@@ -29,6 +31,7 @@ class Medication {
   factory Medication.fromJson(Map<String, dynamic> json) {
     return Medication(
       id: json['id'],
+      userId: json['userId'], // Added userId
       sicknessName: json['sicknessName'],
       medicationName: json['medicationName'],
       prescription: json['prescription'],
@@ -44,6 +47,7 @@ class Medication {
     Map<String, dynamic> json = doc.data() as Map<String, dynamic>;
     return Medication(
       id: doc.id,
+      userId: json['userId'], // Added userId
       sicknessName: json['sicknessName'],
       medicationName: json['medicationName'],
       prescription: json['prescription'],
@@ -58,6 +62,7 @@ class Medication {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId, // Added userId
       'sicknessName': sicknessName,
       'medicationName': medicationName,
       'prescription': prescription,

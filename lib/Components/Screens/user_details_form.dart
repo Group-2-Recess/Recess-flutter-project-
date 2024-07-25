@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart'; // Adjust path as per your project structure
 
 class UserDetailsForm extends StatefulWidget {
-  const UserDetailsForm({Key? key}) : super(key: key);
+  final String userId; // Added userId as a parameter
+
+  const UserDetailsForm({Key? key, required this.userId}) : super(key: key);
 
   @override
   _UserDetailsFormState createState() => _UserDetailsFormState();
@@ -42,10 +44,13 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
           const SnackBar(content: Text('User details saved successfully!')),
         );
 
-        // Navigate to the HomePage
+        // Navigate to the HomePage with userId
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(
+            builder: (context) =>
+                HomePage(userId: widget.userId), // Pass userId to HomePage
+          ),
           (route) => false, // Remove all previous routes
         );
       } catch (e) {

@@ -34,11 +34,13 @@ class MedicationReminderList extends StatelessWidget {
                   subtitle: Text(
                       'Time: ${_formatMedicationTime(medication.alarms[0], context)}'), // Displaying the first alarm time
                   onTap: () {
+                    var widget;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => MedicationVerificationPage(
                           patientId: patientId,
+                          userId: widget.userId,
                           patientName: patientName,
                           medicationId: medication.id, // Fixed this reference
                           patientGender:

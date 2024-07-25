@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/medication.dart';
 import 'package:medical_reminder/models/patient.dart';
-import 'medication_reminder_list.dart'; // Adjust the import path as per your actual structure
-import 'patient_list.dart'; // Adjust the import path as per your actual structure
-import 'set_reminder.dart'; // Import SetReminderPage
+import 'set_reminder.dart';
+import 'package:medical_reminder/Components/Screens/patient_list.dart';
 
 class SideNavigationDrawer extends StatelessWidget {
+  final String userId;
+
+  SideNavigationDrawer({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -36,7 +39,7 @@ class SideNavigationDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PatientListPage(),
+                  builder: (context) => PatientListPage(userId: userId),
                 ),
               );
             },
@@ -44,45 +47,6 @@ class SideNavigationDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.alarm),
             title: Text('Medication Reminders'),
-            onTap: () {
-              Navigator.pop(context);
-
-              // Example patient data
-              Patient selectedPatient = Patient(
-                id: 'example-id',
-                name: 'Example Patient',
-                location: 'Example Location',
-                gender: 'Example Gender',
-                doctor: 'Example Doctor',
-                medications: [
-                  Medication(
-                    id: 'example-medication-id',
-                    medicationName: 'Example Medication',
-                    sicknessName: 'Example Sickness',
-                    prescription: 'Example Prescription',
-                    alarms: [], // Example alarms
-                    isVerified: false,
-                    verificationDate: DateTime.now(),
-                  ),
-                ],
-                verificationRecords: [],
-              );
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MedicationReminderList(
-                    medications: selectedPatient.medications,
-                    patientId: selectedPatient.id,
-                    patientName: selectedPatient.name,
-                  ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.add_alarm),
-            title: Text('Set Reminder'),
             onTap: () {
               Navigator.pop(context);
 
@@ -95,26 +59,29 @@ class SideNavigationDrawer extends StatelessWidget {
                 doctor: 'Example Doctor',
                 medications: [],
                 verificationRecords: [],
+                userId: userId,
               );
 
-              Medication selectedMedication = selectedPatient.medications.isNotEmpty
-                  ? selectedPatient.medications[0]
-                  : Medication(
-                      id: 'example-medication-id',
-                      medicationName: 'Example Medication',
-                      sicknessName: 'Example Sickness',
-                      prescription: 'Example Prescription',
-                      alarms: [],
-                      isVerified: false,
-                      verificationDate: DateTime.now(),
-                    );
+              Medication selectedMedication =
+                  selectedPatient.medications.isNotEmpty
+                      ? selectedPatient.medications[0]
+                      : Medication(
+                          id: 'example-medication-id',
+                          medicationName: 'Example Medication',
+                          sicknessName: 'Example Sickness',
+                          prescription: 'Example Prescription',
+                          alarms: [],
+                          isVerified: false,
+                          verificationDate: DateTime.now(),
+                          userId: userId,
+                        );
 
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SetReminderPage(
-                    patient: selectedPatient,
                     medication: selectedMedication,
+                    userId: userId, patientId: '', // Pass userId here
                   ),
                 ),
               );

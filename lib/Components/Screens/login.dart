@@ -56,11 +56,17 @@ class Login extends StatelessWidget {
                           fontSize: 32)),
                 ),
               ),
-              const SizedBox(height: 80,),
+              const SizedBox(
+                height: 80,
+              ),
               _emailAddress(),
-              const SizedBox(height: 20,),
+              const SizedBox(
+                height: 20,
+              ),
               _password(),
-              const SizedBox(height: 50,),
+              const SizedBox(
+                height: 50,
+              ),
               _signin(context),
             ],
           ),
@@ -82,7 +88,9 @@ class Login extends StatelessWidget {
                   fontWeight: FontWeight.normal,
                   fontSize: 16)),
         ),
-        const SizedBox(height: 16,),
+        const SizedBox(
+          height: 16,
+        ),
         TextField(
           controller: _emailController,
           decoration: InputDecoration(
@@ -114,7 +122,9 @@ class Login extends StatelessWidget {
                   fontWeight: FontWeight.normal,
                   fontSize: 16)),
         ),
-        const SizedBox(height: 16,),
+        const SizedBox(
+          height: 16,
+        ),
         TextField(
           obscureText: true,
           controller: _passwordController,
@@ -140,23 +150,19 @@ class Login extends StatelessWidget {
         elevation: 0,
       ),
       onPressed: () async {
-        bool isAuthenticated = await AuthService().signin(
+        bool result = await AuthService().signin(
           email: _emailController.text,
           password: _passwordController.text,
           context: context,
         );
 
-        if (isAuthenticated) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage(),
-            )
-          );
+        if (result) {
+          // Handle successful sign-in, if needed
         } else {
-          // Handle authentication failure (e.g., show a message)
+          // Handle sign-in failure, if needed
         }
       },
-      child: const Text("Sign In"),
+      child: Text('Sign In'),
     );
   }
 

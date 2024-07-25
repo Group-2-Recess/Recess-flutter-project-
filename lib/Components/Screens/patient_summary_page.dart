@@ -9,8 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PatientSummaryPage extends StatefulWidget {
   final String patientId;
+  final String userId; // Added userId parameter
 
-  PatientSummaryPage({required this.patientId});
+  PatientSummaryPage(
+      {required this.patientId, required this.userId}); // Updated constructor
 
   @override
   _PatientSummaryPageState createState() => _PatientSummaryPageState();
@@ -68,6 +70,7 @@ class _PatientSummaryPageState extends State<PatientSummaryPage> {
                         builder: (context) => RecordPage(
                           patientId: patient.id,
                           patientName: patient.name,
+                          userId: widget.userId, // Pass userId here
                         ),
                       ),
                     );
@@ -256,6 +259,7 @@ class _PatientSummaryPageState extends State<PatientSummaryPage> {
                       medicationName: medicationName,
                       time: alarmTime,
                       taken: true, // Assuming verification means taken
+                      userId: widget.userId, // Pass userId here
                     ),
                   ),
                 );

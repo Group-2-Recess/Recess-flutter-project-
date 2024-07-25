@@ -8,8 +8,13 @@ import 'package:medical_reminder/firestore_service.dart';
 class RecordPage extends StatefulWidget {
   final String patientId;
   final String patientName;
+  final String userId;
 
-  RecordPage({required this.patientId, required this.patientName});
+  RecordPage({
+    required this.patientId,
+    required this.patientName,
+    required this.userId,
+  });
 
   @override
   _RecordPageState createState() => _RecordPageState();
