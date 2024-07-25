@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/firestore_service.dart';
 import 'package:medical_reminder/models/medication.dart';
-import 'medication_detail.dart'; // Import your MedicationDetailPage
+import 'medication_detail.dart'; // Import MedicationDetailPage
 
 class PatientDetailPage extends StatefulWidget {
   final Patient patient;
+  final String userId;
 
-  PatientDetailPage({required this.patient});
+  PatientDetailPage({required this.patient, required this.userId});
 
   @override
   _PatientDetailPageState createState() => _PatientDetailPageState();
@@ -25,12 +26,23 @@ class _PatientDetailPageState extends State<PatientDetailPage> {
   @override
   void initState() {
     super.initState();
-    _name = widget.patient.name ?? ''; // Use existing name if present
-    _location =
-        widget.patient.location ?? ''; // Use existing location if present
-    _gender = widget.patient.gender ?? ''; // Use existing gender if present
-    _doctor = widget.patient.doctor ?? ''; // Use existing doctor if present
+    _name = widget.patient.name ?? '';
+    _location = widget.patient.location ?? '';
+    _gender = widget.patient.gender ?? '';
+    _doctor = widget.patient.doctor ?? '';
     _medications = List.from(widget.patient.medications ?? []);
+  }
+
+  void _navigateToMedicationDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedicationDetailPage(
+          patient: widget.patient,
+          userId: widget.userId,
+        ),
+      ),
+    );
   }
 
   @override
@@ -84,12 +96,23 @@ class _PatientDetailPageState extends State<PatientDetailPage> {
                 },
               ),
               SizedBox(height: 16),
-              TextFormField(
-                initialValue: _gender,
+              DropdownButtonFormField<String>(
+                value: _gender.isNotEmpty ? _gender : null,
                 decoration: InputDecoration(labelText: 'Gender'),
+                items: ['Male', 'Female', 'Other']
+                    .map((label) => DropdownMenuItem(
+                          child: Text(label),
+                          value: label,
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _gender = value!;
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter the gender';
+                    return 'Please select the gender';
                   }
                   return null;
                 },
@@ -111,39 +134,32 @@ class _PatientDetailPageState extends State<PatientDetailPage> {
                   _doctor = value!;
                 },
               ),
-              SizedBox(height: 32), // Ensure proper spacing before the button
+              SizedBox(height: 32),
               Center(
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
 
-                      // Ensure the patient has an ID
                       String patientId = widget.patient.id.isNotEmpty
                           ? widget.patient.id
                           : _firestoreService.generateId();
 
                       Patient updatedPatient = Patient(
                         id: patientId,
+                        userId: widget.userId,
                         name: _name,
                         location: _location,
                         gender: _gender,
                         doctor: _doctor,
-                        medications: _medications, // Updated medications list
+                        medications: _medications,
                         verificationRecords: widget.patient.verificationRecords,
                       );
 
-                      // Save updated patient to Firestore using FirestoreService
                       _firestoreService.savePatient(updatedPatient).then((_) {
                         print('Patient updated in Firestore');
                         // Navigate to MedicationDetailPage
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MedicationDetailPage(patient: updatedPatient),
-                          ),
-                        );
+                        _navigateToMedicationDetail();
                       }).catchError((error) {
                         print('Error updating patient in Firestore: $error');
                         // Handle error

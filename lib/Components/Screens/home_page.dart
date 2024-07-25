@@ -3,7 +3,10 @@ import 'patient_list.dart'; // Adjust path as per your project structure
 import 'package:medical_reminder/firestore_service.dart'; // Adjust path as per your project structure
 
 class HomePage extends StatelessWidget {
+  final String userId; // Added userId as a required parameter
   final FirestoreService firestoreService = FirestoreService();
+
+  HomePage({required this.userId}); // Initialize userId through constructor
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +57,9 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PatientListPage(),
+                          builder: (context) => PatientListPage(
+                            userId: userId, // Pass userId to PatientListPage
+                          ),
                         ),
                       );
                     },

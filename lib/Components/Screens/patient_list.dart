@@ -7,6 +7,9 @@ import 'patient_detail.dart';
 
 class PatientListPage extends StatelessWidget {
   final FirestoreService _firebaseService = FirestoreService();
+  final String userId; // Add userId parameter
+
+  PatientListPage({required this.userId}); // Initialize userId
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +65,13 @@ class PatientListPage extends StatelessWidget {
                     ],
                   ),
                   onTap: () {
-                    // Navigate to patient summary page with patientId
+                    // Navigate to patient summary page with patientId and userId
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => PatientSummaryPage(
                           patientId: patient.id,
+                          userId: userId, // Pass userId here
                         ),
                       ),
                     );
@@ -78,13 +82,14 @@ class PatientListPage extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
-                          // Navigate to edit patient page
+                          // Navigate to edit patient page with userId
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => EditPatientPage(
                                 patient: patient,
                                 onSave: onSave,
+                                userId: userId, // Pass userId here
                               ),
                             ),
                           );
@@ -110,7 +115,10 @@ class PatientListPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PatientDetailPage(patient: Patient.empty()),
+              builder: (context) => PatientDetailPage(
+                patient: Patient.empty(),
+                userId: userId, // Pass userId here
+              ),
             ),
           );
         },

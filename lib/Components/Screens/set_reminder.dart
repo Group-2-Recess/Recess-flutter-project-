@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/models/medication.dart';
-import 'package:medical_reminder/firestore_service.dart'; // Import necessary for Firestore
 
 class SetReminderPage extends StatefulWidget {
-  final Patient patient;
   final Medication medication;
+  final String userId;
+  final String patientId; // Patient ID
 
-  SetReminderPage({required this.patient, required this.medication});
+  SetReminderPage({
+    required this.medication,
+    required this.userId,
+    required this.patientId,
+  });
 
   @override
   _SetReminderPageState createState() => _SetReminderPageState();
@@ -15,7 +18,6 @@ class SetReminderPage extends StatefulWidget {
 
 class _SetReminderPageState extends State<SetReminderPage> {
   List<MedicationTime> alarms = [];
-  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   void initState() {
@@ -36,25 +38,8 @@ class _SetReminderPageState extends State<SetReminderPage> {
     }
   }
 
-  Future<void> _saveReminders() async {
-    try {
-      // Convert the List<MedicationTime> to a List<Map<String, dynamic>>
-      Map<String, dynamic> reminderData = {
-        'alarms':
-            alarms.map((medicationTime) => medicationTime.toJson()).toList(),
-      };
-
-      await _firestoreService.updateMedicationReminders(
-        widget.patient.id,
-        widget.medication.id,
-        reminderData,
-      );
-      Navigator.pop(context, reminderData);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    }
+  void _saveReminders() {
+    Navigator.pop(context, alarms);
   }
 
   @override
@@ -65,25 +50,24 @@ class _SetReminderPageState extends State<SetReminderPage> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: alarms.length,
-              itemBuilder: (context, index) {
-                final alarm = alarms[index];
-                return ListTile(
-                  title: Text(
-                      '${alarm.hour}:${alarm.minute.toString().padLeft(2, '0')}'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      setState(() {
-                        alarms.removeAt(index);
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: alarms.length,
+            itemBuilder: (context, index) {
+              final alarm = alarms[index];
+              return ListTile(
+                title: Text(
+                    '${alarm.hour}:${alarm.minute.toString().padLeft(2, '0')}'),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    setState(() {
+                      alarms.removeAt(index);
+                    });
+                  },
+                ),
+              );
+            },
           ),
           ElevatedButton(
             onPressed: _addReminder,

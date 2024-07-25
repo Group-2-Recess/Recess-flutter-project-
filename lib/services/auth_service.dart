@@ -6,31 +6,21 @@ import 'package:medical_reminder/selection_page.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 
 class AuthService {
-  // Example list of medications
-  final List<String> medications = [
-    'Medication 1',
-    'Medication 2',
-    'Medication 3'
-  ];
-
-  Future<void> signup({
-    required String email,
-    required String password,
-    required BuildContext context
-  }) async {
+  Future<void> signup(
+      {required String email,
+      required String password,
+      required BuildContext context}) async {
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       await Future.delayed(const Duration(seconds: 1));
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (BuildContext context) => SelectionPage() // Navigate to Selection Page
-          )
-      );
+              builder: (BuildContext context) =>
+                  SelectionPage() // Navigate to Selection Page
+              ));
       Fluttertoast.showToast(
         msg: "Account created successfully. Please log in.",
         toastLength: Toast.LENGTH_LONG,
@@ -59,24 +49,23 @@ class AuthService {
     }
   }
 
-  Future<bool> signin({
-    required String email,
-    required String password,
-    required BuildContext context
-  }) async {
+  Future<bool> signin(
+      {required String email,
+      required String password,
+      required BuildContext context}) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      String userId = userCredential.user!.uid; // Get the userId
 
       await Future.delayed(const Duration(seconds: 1));
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (BuildContext context) => HomePage() // Pass medications list
-          )
-      );
+              builder: (BuildContext context) =>
+                  HomePage(userId: userId) // Pass userId to HomePage
+              ));
       return true;
     } on FirebaseAuthException catch (e) {
       String message = '';
@@ -100,16 +89,10 @@ class AuthService {
     }
   }
 
-  Future<void> signout({
-    required BuildContext context
-  }) async {
+  Future<void> signout({required BuildContext context}) async {
     await FirebaseAuth.instance.signOut();
     await Future.delayed(const Duration(seconds: 1));
     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (BuildContext context) => Login()
-        )
-    );
+        context, MaterialPageRoute(builder: (BuildContext context) => Login()));
   }
 }

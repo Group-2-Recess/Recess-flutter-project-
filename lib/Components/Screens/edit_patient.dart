@@ -7,8 +7,13 @@ import 'package:uuid/uuid.dart';
 class EditPatientPage extends StatefulWidget {
   final Patient patient;
   final ValueChanged<Patient> onSave;
+  final String userId; // Add this line
 
-  EditPatientPage({required this.patient, required this.onSave});
+  EditPatientPage({
+    required this.patient,
+    required this.onSave,
+    required this.userId, // Update constructor
+  });
 
   @override
   _EditPatientPageState createState() => _EditPatientPageState();
@@ -43,6 +48,7 @@ class _EditPatientPageState extends State<EditPatientPage> {
         alarms: [],
         isVerified: false,
         verificationDate: DateTime.now(),
+        userId: widget.userId, // Add userId here
       ));
     });
   }
@@ -62,6 +68,7 @@ class _EditPatientPageState extends State<EditPatientPage> {
       doctor: _doctorController.text,
       medications: _medications,
       verificationRecords: [], // Adjust as needed
+      userId: widget.userId, // Add userId here
     );
 
     try {

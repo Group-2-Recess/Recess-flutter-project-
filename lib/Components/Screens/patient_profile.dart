@@ -1,10 +1,11 @@
+// ProfilePage.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data'; // For image byte data
 import 'user_details_form.dart'; // Ensure this is the correct path to UserDetailsForm
-
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -20,10 +21,12 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _profileImageUrl; // URL for displaying the image
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes(); // Use readAsBytes for async operation
+      final bytes =
+          await pickedFile.readAsBytes(); // Use readAsBytes for async operation
       setState(() {
         _profileImage = bytes;
         _profileImageUrl = null; // Reset the profile image URL
@@ -70,24 +73,31 @@ class _ProfilePageState extends State<ProfilePage> {
         }
 
         // Create a document reference for the user profile
-        final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc();
+        final userRef =
+            FirebaseFirestore.instance.collection('patient_profiles').doc();
 
         // Save profile data
         await userRef.set({
-          'id': userRef.id,  // Use the document ID as profile ID
+          'id': userRef.id, // Use the document ID as profile ID
           'firstName': _firstName,
           'lastName': _lastName,
           'dateOfBirth': Timestamp.fromDate(_dateOfBirth!),
           'profileImageUrl': imageUrl,
         });
 
-        // Navigate to congratulations page after successful save
+        // Navigate to UserDetailsForm after successful save, passing the userId
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => UserDetailsForm()));
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserDetailsForm(userId: userRef.id),
+          ),
+        );
       } else {
         // Handle case where no profile image is selected or date of birth is not set
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please select a profile image and date of birth.")),
+          SnackBar(
+              content:
+                  Text("Please select a profile image and date of birth.")),
         );
       }
     }
@@ -166,7 +176,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: _pickImage,
                         child: CircleAvatar(
                           radius: 60,
-                          backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
+                          backgroundImage: _profileImage != null
+                              ? MemoryImage(_profileImage!)
+                              : null,
                           child: _profileImage == null
                               ? Icon(Icons.camera_alt, size: 50)
                               : null,

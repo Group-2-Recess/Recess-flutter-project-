@@ -6,19 +6,21 @@ class MedicationVerificationPage extends StatelessWidget {
   final String patientId;
   final String patientName;
   final String patientGender;
-  final String medicationId; // Ensure this is defined
+  final String medicationId;
   final String medicationName;
   final TimeOfDay time;
   final bool taken;
+  final String userId; // Added userId parameter
 
   MedicationVerificationPage({
     required this.patientId,
     required this.patientName,
     required this.patientGender,
-    required this.medicationId, // Add this parameter
+    required this.medicationId,
     required this.medicationName,
     required this.time,
     required this.taken,
+    required this.userId, // Initialize userId
   });
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -68,17 +70,18 @@ class MedicationVerificationPage extends StatelessWidget {
       String formattedTime = _formatTimeOfDay(time);
       String formattedDate = _formatDate(DateTime.now());
 
-      // Constructing the verification record data as Map<String, String>
-      Map<String, String> verificationData = {
+      // Constructing the verification record data as Map<String, dynamic>
+      Map<String, dynamic> verificationData = {
         'patientName': patientName,
         'gender': patientGender,
         'medicationName': medicationName,
         'time': formattedTime,
-        'date': DateTime.now().toIso8601String(), // Save date in ISO format
+        'date': formattedDate, // Save date in ISO format
         'taken': taken.toString(),
+        'userId': userId, // Include userId in the verification data
       };
 
-      // Example of the updated method call
+      // Save the verification record
       await _firestoreService.saveMedicationVerification(
         patientId, // Pass the patient ID
         medicationId, // Pass the medication ID
