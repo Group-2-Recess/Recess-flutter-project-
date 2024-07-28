@@ -1,26 +1,43 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:medical_reminder/Components/Screens/home_page.dart';
 import 'package:medical_reminder/selection_page.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
+import 'package:medical_reminder/Components/Screens/user_details_form.dart';
 
 class AuthService {
-  Future<void> signup(
-      {required String email,
-      required String password,
-      required BuildContext context}) async {
-    try {
-      await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-      await Future.delayed(const Duration(seconds: 1));
+  Future<void> signup({
+    required String email,
+    required String password,
+    required BuildContext context,
+    required String role,
+  }) async {
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      String userId = userCredential.user!.uid;
+
+      await _firestore.collection('users').doc(userId).set({
+        'email': email,
+        'role': role,
+      });
+
       Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) =>
-                  SelectionPage() // Navigate to Selection Page
-              ));
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => SelectionPage(),
+        ),
+      );
+
       Fluttertoast.showToast(
         msg: "Account created successfully. Please log in.",
         toastLength: Toast.LENGTH_LONG,
@@ -49,23 +66,51 @@ class AuthService {
     }
   }
 
-  Future<bool> signin(
-      {required String email,
-      required String password,
-      required BuildContext context}) async {
+  Future<bool> signin({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      String userId = userCredential.user!.uid; // Get the userId
+      String userId = userCredential.user!.uid;
 
-      await Future.delayed(const Duration(seconds: 1));
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(userId).get();
+
+      if (userDoc.exists) {
+        String role = userDoc['role'];
+
+        if (role == 'caregiver') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) => HomePage(),
+            ),
+          );
+        } else if (role == 'patient') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
               builder: (BuildContext context) =>
-                  HomePage(userId: userId) // Pass userId to HomePage
-              ));
+                  UserDetailsForm(userId: userId),
+            ),
+          );
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: "User document not found.",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.SNACKBAR,
+          backgroundColor: Colors.black54,
+          textColor: Colors.white,
+          fontSize: 14.0,
+        );
+      }
       return true;
     } on FirebaseAuthException catch (e) {
       String message = '';
@@ -90,9 +135,11 @@ class AuthService {
   }
 
   Future<void> signout({required BuildContext context}) async {
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
     await Future.delayed(const Duration(seconds: 1));
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (BuildContext context) => Login()));
+      context,
+      MaterialPageRoute(builder: (BuildContext context) => Login()),
+    );
   }
 }

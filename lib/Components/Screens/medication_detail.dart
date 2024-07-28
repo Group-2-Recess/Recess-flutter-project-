@@ -1,101 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/medication.dart';
-import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/firestore_service.dart';
 import 'set_reminder.dart';
+import 'package:medical_reminder/models/patient.dart';
 
 class MedicationDetailPage extends StatefulWidget {
-  final Patient patient;
+  final String patientId; // Changed to String
   final String userId;
+  final String caregiverId;
 
-  MedicationDetailPage({required this.patient, required this.userId});
+  MedicationDetailPage({
+    required this.patientId,
+    required this.userId,
+    required this.caregiverId,
+  });
 
   @override
   _MedicationDetailPageState createState() => _MedicationDetailPageState();
 }
 
 class _MedicationDetailPageState extends State<MedicationDetailPage> {
-  final _formKey = GlobalKey<FormState>();
-  List<Medication> _medications = [];
   final FirestoreService _firestoreService = FirestoreService();
+  late List<Medication> _medications;
+
+  // Form fields
+  final _formKey = GlobalKey<FormState>();
+  final _medicationNameController = TextEditingController();
+  final _medicationDoseController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _fetchMedications();
+    _medications = [];
+    _loadMedications();
   }
 
-  Future<void> _fetchMedications() async {
-    try {
-      List<Medication> medications =
-          await _firestoreService.fetchMedicationsForPatient(widget.patient.id);
+  void _loadMedications() {
+    _firestoreService
+        .fetchMedicationsForPatient(
+      widget.userId, // Pass userId
+      widget.caregiverId, // Pass caregiverId
+      widget.patientId, // Pass patientId
+    )
+        .then((medications) {
       setState(() {
         _medications = medications;
       });
-    } catch (e) {
-      print('Error fetching medications: $e');
-    }
+    }).catchError((error) {
+      print('Error loading medications: $error');
+      // Handle the error appropriately
+    });
+  }
+
+  void _saveMedication(Medication medication) {
+    _firestoreService
+        .saveMedication(widget.patientId, widget.caregiverId, medication)
+        .then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Medication saved successfully')),
+      );
+      _loadMedications(); // Refresh medication list
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save medication: $error')),
+      );
+    });
   }
 
   void _navigateToSetReminder(Medication medication) async {
-    final newAlarms = await Navigator.push(
+    final updatedAlarms = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SetReminderPage(
           medication: medication,
+          caregiverId: widget.caregiverId,
+          patientId: widget.patientId,
           userId: widget.userId,
-          patientId: widget.patient.id,
         ),
       ),
     );
 
-    if (newAlarms != null) {
+    if (updatedAlarms != null) {
       setState(() {
-        medication.alarms = newAlarms;
+        medication.alarms = updatedAlarms;
       });
     }
   }
 
   void _addMedication() {
-    setState(() {
-      _medications.add(Medication(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        sicknessName: '',
-        medicationName: '',
-        prescription: '',
-        alarms: [],
-        isVerified: false,
-        verificationDate: DateTime.now(),
+    if (_formKey.currentState!.validate()) {
+      final newMedication = Medication(
+        id: _firestoreService.generateId(),
         userId: widget.userId,
-      ));
-    });
+        caregiverId: widget.caregiverId,
+        patientId: widget.patientId,
+        sicknessName: '', // Default or empty value
+        medicationName: _medicationNameController.text,
+        prescription: _medicationDoseController.text,
+        alarms: [], // Initialize with an empty list of alarms
+        isVerified: false, // Default value
+        verificationDate: DateTime.now(), // Default value
+      );
+      _saveMedication(newMedication);
+
+      // Clear form fields
+      _medicationNameController.clear();
+      _medicationDoseController.clear();
+    }
   }
 
-  void _saveMedications() {
-    if (_formKey.currentState!.validate() &&
-        _medications.every((med) => med.alarms.isNotEmpty)) {
-      _formKey.currentState!.save();
-
-      widget.patient.medications = _medications;
-
-      _firestoreService.savePatient(widget.patient).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Medications saved successfully')),
-        );
-        Navigator.pop(context);
-      }).catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save medications: $error')),
-        );
-      });
-    } else {
+  void _deleteMedication(Medication medication) {
+    _firestoreService
+        .deleteMedication(widget.patientId, widget.caregiverId, medication.id)
+        .then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Please set reminders for all medications and ensure all fields are filled'),
-        ),
+        SnackBar(content: Text('Medication deleted successfully')),
       );
-    }
+      setState(() {
+        _medications.remove(medication);
+      });
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete medication: $error')),
+      );
+    });
   }
 
   @override
@@ -105,124 +133,64 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
         title: Text('Medication Details'),
         backgroundColor: Colors.teal,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'Enter Medication Details',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.teal,
-                ),
+      body: Column(
+        children: [
+          // Form to add new medication
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  TextFormField(
+                    controller: _medicationNameController,
+                    decoration: InputDecoration(labelText: 'Medication Name'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter medication name' : null,
+                  ),
+                  TextFormField(
+                    controller: _medicationDoseController,
+                    decoration: InputDecoration(labelText: 'Dose'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter dose' : null,
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _addMedication,
+                    child: Text('Add Medication'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              ..._medications.map((medication) => Card(
-                    elevation: 5,
-                    margin: EdgeInsets.symmetric(vertical: 10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          // List of existing medications
+          Expanded(
+            child: ListView(
+              children: <Widget>[
+                ..._medications.map((medication) => ListTile(
+                      title: Text(medication.medicationName),
+                      subtitle: Text('Dose: ${medication.prescription}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          TextFormField(
-                            initialValue: medication.medicationName,
-                            decoration:
-                                InputDecoration(labelText: 'Medication Name'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter the medication name';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              medication.medicationName = value!;
-                            },
-                          ),
-                          SizedBox(height: 16),
-                          TextFormField(
-                            initialValue: medication.sicknessName,
-                            decoration:
-                                InputDecoration(labelText: 'Sickness Name'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter the sickness name';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              medication.sicknessName = value!;
-                            },
-                          ),
-                          SizedBox(height: 16),
-                          TextFormField(
-                            initialValue: medication.prescription,
-                            decoration:
-                                InputDecoration(labelText: 'Prescription'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter the prescription';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              medication.prescription = value!;
-                            },
-                          ),
-                          SizedBox(height: 16),
-                          ElevatedButton(
+                          IconButton(
+                            icon: Icon(Icons.alarm_add, color: Colors.blue),
                             onPressed: () => _navigateToSetReminder(medication),
-                            child: Text('Set Reminders'),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteMedication(medication),
                           ),
                         ],
                       ),
-                    ),
-                  )),
-              SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _addMedication,
-                  child: Text('Add Medication'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    textStyle: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 32),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _saveMedications,
-                  child: Text('Save'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    textStyle: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                    )),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

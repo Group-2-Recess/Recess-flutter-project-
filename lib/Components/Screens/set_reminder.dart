@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/medication.dart';
+import 'package:medical_reminder/firestore_service.dart';
 
 class SetReminderPage extends StatefulWidget {
-  final Medication medication;
   final String userId;
-  final String patientId; // Patient ID
+  final String patientId;
+  final String caregiverId;
+  final Medication medication;
 
   SetReminderPage({
-    required this.medication,
     required this.userId,
     required this.patientId,
+    required this.caregiverId,
+    required this.medication,
   });
 
   @override
@@ -17,29 +20,32 @@ class SetReminderPage extends StatefulWidget {
 }
 
 class _SetReminderPageState extends State<SetReminderPage> {
-  List<MedicationTime> alarms = [];
+  final TextEditingController _reminderTimeController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    alarms = widget.medication.alarms;
-  }
-
-  void _addReminder() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (time != null) {
-      setState(() {
-        alarms.add(MedicationTime(hour: time.hour, minute: time.minute));
-      });
+  Future<void> _saveReminder() async {
+    final reminderTime = _reminderTimeController.text;
+    if (reminderTime.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please enter a reminder time')));
+      return;
     }
-  }
 
-  void _saveReminders() {
-    Navigator.pop(context, alarms);
+    try {
+      final reminderData = {
+        'reminderTime': reminderTime,
+        // Add additional fields as needed
+      };
+
+      await FirestoreService().addReminder(
+          widget.userId, widget.caregiverId, widget.patientId, reminderData);
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Reminder set successfully')));
+      Navigator.pop(context); // Navigate back after saving
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to set reminder: $e')));
+    }
   }
 
   @override
@@ -47,37 +53,34 @@ class _SetReminderPageState extends State<SetReminderPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Set Reminder'),
+        backgroundColor: Colors.teal,
       ),
-      body: Column(
-        children: [
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: alarms.length,
-            itemBuilder: (context, index) {
-              final alarm = alarms[index];
-              return ListTile(
-                title: Text(
-                    '${alarm.hour}:${alarm.minute.toString().padLeft(2, '0')}'),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    setState(() {
-                      alarms.removeAt(index);
-                    });
-                  },
-                ),
-              );
-            },
-          ),
-          ElevatedButton(
-            onPressed: _addReminder,
-            child: Text('Add Reminder'),
-          ),
-          ElevatedButton(
-            onPressed: _saveReminders,
-            child: Text('Save Reminders'),
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Set Reminder for ${widget.medication.medicationName}',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+            SizedBox(height: 20),
+            TextField(
+              controller: _reminderTimeController,
+              decoration:
+                  InputDecoration(labelText: 'Reminder Time (e.g., 8:00 AM)'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveReminder,
+              child: Text('Save Reminder'),
+            ),
+          ],
+        ),
       ),
     );
   }

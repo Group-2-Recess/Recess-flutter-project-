@@ -1,170 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/firestore_service.dart';
-import 'edit_patient.dart';
-import 'patient_summary_page.dart';
-import 'patient_detail.dart';
+import 'patient_detail.dart'; // Import PatientDetailPage
+import 'update_patient.dart'; // Import UpdatePatientPage
 
-class PatientListPage extends StatelessWidget {
-  final FirestoreService _firebaseService = FirestoreService();
-  final String userId; // Add userId parameter
+class PatientListPage extends StatefulWidget {
+  final String userId;
+  final String caregiverId;
 
-  PatientListPage({required this.userId}); // Initialize userId
+  PatientListPage({required this.userId, required this.caregiverId});
+
+  @override
+  _PatientListPageState createState() => _PatientListPageState();
+}
+
+class _PatientListPageState extends State<PatientListPage> {
+  List<Patient> patients = [];
+  bool _isLoading = true; // Add loading state
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPatients();
+  }
+
+  Future<void> _fetchPatients() async {
+    try {
+      List<Patient> fetchedPatients = await FirestoreService()
+          .getPatients(widget.userId, widget.caregiverId);
+      setState(() {
+        patients = fetchedPatients;
+        _isLoading = false; // Set loading state to false when data is fetched
+      });
+    } catch (e) {
+      print('Error fetching patients: $e');
+      setState(() {
+        _isLoading =
+            false; // Set loading state to false even if there is an error
+      });
+    }
+  }
+
+  Future<void> _deletePatient(BuildContext context, String patientId) async {
+    try {
+      await FirestoreService()
+          .deletePatient(widget.userId, widget.caregiverId, patientId);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Patient deleted')));
+      _fetchPatients(); // Refresh the patients list
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete patient: $e')));
+    }
+  }
+
+  void _navigateToAddPatientPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientDetailPage(
+          patient: Patient
+              .empty(), // Provide a default empty patient or handle null case
+          profileId: widget
+              .userId, // Assuming profileId is userId for now; adjust if needed
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Define onSave function to update patient
-    void onSave(Patient updatedPatient) {
-      _firebaseService.updatePatient(updatedPatient).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Patient updated successfully')),
-        );
-      }).catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update patient: $error')),
-        );
-      });
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Patient List'),
         backgroundColor: Colors.teal,
       ),
-      body: StreamBuilder<List<Patient>>(
-        stream: _firebaseService.getPatients(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-          final patients = snapshot.data!;
-          return ListView.builder(
-            itemCount: patients.length,
-            itemBuilder: (context, index) {
-              final patient = patients[index];
-              return Card(
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: ListTile(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  title: Text(
-                    patient.name,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 4),
-                      Text('Location: ${patient.location}'),
-                      SizedBox(height: 4),
-                      Text('Doctor: ${patient.doctor}'),
-                    ],
-                  ),
-                  onTap: () {
-                    // Navigate to patient summary page with patientId and userId
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PatientSummaryPage(
-                          patientId: patient.id,
-                          userId: userId, // Pass userId here
-                        ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : patients.isEmpty
+              ? Center(child: Text('No patients found'))
+              : ListView.builder(
+                  itemCount: patients.length,
+                  itemBuilder: (context, index) {
+                    final patient = patients[index];
+                    return ListTile(
+                      title: Text(patient.name),
+                      subtitle: Text(patient.location),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PatientDetailPage(
+                              patient: patient,
+                              profileId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => UpdatePatientPage(
+                                    userId: widget.userId,
+                                    caregiverId: widget.caregiverId,
+                                    patient: patient,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () =>
+                                _deletePatient(context, patient.id),
+                          ),
+                        ],
                       ),
                     );
                   },
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          // Navigate to edit patient page with userId
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditPatientPage(
-                                patient: patient,
-                                onSave: onSave,
-                                userId: userId, // Pass userId here
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          // Implement delete functionality
-                          _showDeleteConfirmationDialog(context, patient);
-                        },
-                      ),
-                    ],
-                  ),
                 ),
-              );
-            },
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PatientDetailPage(
-                patient: Patient.empty(),
-                userId: userId, // Pass userId here
-              ),
-            ),
-          );
-        },
-        child: Icon(Icons.add),
+        onPressed: _navigateToAddPatientPage,
+        child: Icon(Icons.add), // Plus sign icon
         backgroundColor: Colors.teal,
+        tooltip: 'Add Patient', // Tooltip text when hovering over the button
       ),
-    );
-  }
-
-  void _showDeleteConfirmationDialog(BuildContext context, Patient patient) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Patient'),
-          content: Text('Are you sure you want to delete ${patient.name}?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Delete'),
-              onPressed: () {
-                _firebaseService.deletePatient(patient.id).then((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Patient deleted successfully'),
-                    ),
-                  );
-                  Navigator.of(context).pop();
-                }).catchError((error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete patient: $error'),
-                    ),
-                  );
-                  Navigator.of(context).pop();
-                });
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }

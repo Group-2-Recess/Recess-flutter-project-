@@ -1,11 +1,14 @@
-// ProfilePage.dart
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data'; // For image byte data
-import 'user_details_form.dart'; // Ensure this is the correct path to UserDetailsForm
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:medical_reminder/models/profilemodel.dart';
+import 'package:medical_reminder/firestore_service.dart';
+import 'user_details_form.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -17,20 +20,49 @@ class _ProfilePageState extends State<ProfilePage> {
   String _firstName = '';
   String _lastName = '';
   DateTime? _dateOfBirth;
-  Uint8List? _profileImage; // Change to Uint8List for Flutter Web
-  String? _profileImageUrl; // URL for displaying the image
+  io.File? _profileImage;
+  final FirestoreService _firestoreService = FirestoreService();
+  late User _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser!;
+    _checkExistingProfile();
+  }
+
+  Future<void> _checkExistingProfile() async {
+    try {
+      DocumentSnapshot profileDoc = await FirebaseFirestore.instance
+          .collection('patient_profile')
+          .doc(_user.uid)
+          .get();
+
+      if (profileDoc.exists) {
+        // Profile exists, redirect to UserDetailsForm
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserDetailsForm(userId: _user.uid),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error checking profile: $e");
+    }
+  }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      final bytes =
-          await pickedFile.readAsBytes(); // Use readAsBytes for async operation
-      setState(() {
-        _profileImage = bytes;
-        _profileImageUrl = null; // Reset the profile image URL
-      });
+    if (kIsWeb) {
+      // Implement web image picker logic here if needed
+    } else {
+      final pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _profileImage = io.File(pickedFile.path);
+        });
+      }
     }
   }
 
@@ -48,58 +80,66 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String> _uploadProfileImage(Uint8List image) async {
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('profile_images/${DateTime.now().toString()}');
-    final uploadTask = storageRef.putData(image);
-    final snapshot = await uploadTask;
-    return await snapshot.ref.getDownloadURL();
+  Future<String> _uploadProfileImage(io.File image) async {
+    if (kIsWeb) {
+      // Implement web-specific upload logic here if needed
+    } else {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${DateTime.now().toString()}');
+      final uploadTask = storageRef.putFile(image);
+      final snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    }
+    return '';
   }
 
   Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      if (_profileImage != null && _dateOfBirth != null) {
-        String imageUrl;
-        try {
-          imageUrl = await _uploadProfileImage(_profileImage!);
-        } catch (error) {
-          // Handle image upload error (e.g., display a snackbar)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error uploading profile image: $error")),
-          );
-          return;
-        }
-
-        // Create a document reference for the user profile
-        final userRef =
-            FirebaseFirestore.instance.collection('patient_profiles').doc();
-
-        // Save profile data
-        await userRef.set({
-          'id': userRef.id, // Use the document ID as profile ID
-          'firstName': _firstName,
-          'lastName': _lastName,
-          'dateOfBirth': Timestamp.fromDate(_dateOfBirth!),
-          'profileImageUrl': imageUrl,
-        });
-
-        // Navigate to UserDetailsForm after successful save, passing the userId
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserDetailsForm(userId: userRef.id),
-          ),
-        );
-      } else {
-        // Handle case where no profile image is selected or date of birth is not set
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text("Please select a profile image and date of birth.")),
-        );
+    try {
+      String imageUrl = '';
+      if (_profileImage != null) {
+        imageUrl = await _uploadProfileImage(_profileImage!);
       }
+
+      DocumentReference docRef = FirebaseFirestore.instance
+          .collection('patient_profile')
+          .doc(_user.uid); // Use the logged-in user's UID as the document ID
+
+      PatientProfile profile = PatientProfile(
+        id: docRef.id, // Use the user's UID as the document ID
+        firstName: _firstName,
+        lastName: _lastName,
+        dateOfBirth: _dateOfBirth!,
+        profileImageUrl: imageUrl,
+      );
+
+      await _firestoreService.savePatientProfile(profile);
+
+      Fluttertoast.showToast(
+        msg: "Profile created successfully.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.SNACKBAR,
+        backgroundColor: Colors.black54,
+        textColor: Colors.white,
+        fontSize: 14.0,
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserDetailsForm(userId: _user.uid),
+        ),
+      );
+    } catch (e) {
+      print("Error saving profile: $e");
+      Fluttertoast.showToast(
+        msg: "Failed to create profile.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.SNACKBAR,
+        backgroundColor: Colors.black54,
+        textColor: Colors.white,
+        fontSize: 14.0,
+      );
     }
   }
 
@@ -112,7 +152,10 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0.0,
         title: Text(
           'Create Your Patient Profile',
-          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -122,6 +165,19 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                SizedBox(height: 20.0),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 80.0,
+                    backgroundImage: _profileImage != null
+                        ? FileImage(_profileImage!)
+                        : null,
+                    child: _profileImage == null
+                        ? Icon(Icons.add_a_photo, size: 40.0)
+                        : null,
+                  ),
+                ),
                 SizedBox(height: 20.0),
                 Form(
                   key: _formKey,
@@ -139,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? 'Please enter your first name'
                             : null,
                       ),
-                      SizedBox(height: 20.0),
+                      SizedBox(height: 10.0),
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'Last Name',
@@ -152,46 +208,43 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? 'Please enter your last name'
                             : null,
                       ),
-                      SizedBox(height: 20.0),
+                      SizedBox(height: 10.0),
                       TextFormField(
-                        controller: TextEditingController(
-                          text: _dateOfBirth != null
-                              ? "${_dateOfBirth!.year}-${_dateOfBirth!.month}-${_dateOfBirth!.day}"
-                              : '',
-                        ),
+                        readOnly: true,
                         decoration: InputDecoration(
                           labelText: 'Date of Birth',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.calendar_today),
+                            onPressed: () => _selectDate(context),
+                          ),
                         ),
-                        readOnly: true,
                         onTap: () => _selectDate(context),
                         validator: (value) => _dateOfBirth == null
                             ? 'Please select your date of birth'
                             : null,
-                      ),
-                      SizedBox(height: 20.0),
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundImage: _profileImage != null
-                              ? MemoryImage(_profileImage!)
-                              : null,
-                          child: _profileImage == null
-                              ? Icon(Icons.camera_alt, size: 50)
-                              : null,
+                        controller: TextEditingController(
+                          text: _dateOfBirth == null
+                              ? ''
+                              : "${_dateOfBirth!.toLocal()}".split(' ')[0],
                         ),
                       ),
                       SizedBox(height: 20.0),
                       ElevatedButton(
-                        onPressed: _saveProfile,
-                        child: Text('Save Profile'),
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            await _saveProfile();
+                          }
+                        },
+                        child: Text('Submit'),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(height: 20.0),
               ],
             ),
           ),
