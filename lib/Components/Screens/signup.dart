@@ -4,11 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 import 'package:medical_reminder/services/auth_service.dart';
 
-class Signup extends StatelessWidget {
-  Signup({super.key});
+class Signup extends StatefulWidget {
+  @override
+  _SignupState createState() => _SignupState();
+}
 
+class _SignupState extends State<Signup> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String _role = 'patient'; // Default role
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +46,8 @@ class Signup extends StatelessWidget {
               _emailAddress(),
               const SizedBox(height: 20),
               _password(),
+              const SizedBox(height: 20),
+              _roleDropdown(),
               const SizedBox(height: 50),
               _signup(context),
             ],
@@ -71,7 +77,7 @@ class Signup extends StatelessWidget {
           controller: _emailController,
           decoration: InputDecoration(
             filled: true,
-            hintText: 'enter your e-mail',
+            hintText: 'Enter your email',
             hintStyle: const TextStyle(
               color: Color(0xff6A6A6A),
               fontWeight: FontWeight.normal,
@@ -120,6 +126,46 @@ class Signup extends StatelessWidget {
     );
   }
 
+  Widget _roleDropdown() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Role',
+          style: GoogleFonts.raleway(
+            textStyle: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.normal,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: _role,
+          items: [
+            DropdownMenuItem(value: 'patient', child: Text('Patient')),
+            DropdownMenuItem(value: 'caregiver', child: Text('Caregiver')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _role = value!;
+            });
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xffF7F7F9),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _signup(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
@@ -135,6 +181,7 @@ class Signup extends StatelessWidget {
           email: _emailController.text,
           password: _passwordController.text,
           context: context,
+          role: _role,
         );
       },
       child: const Text("Sign Up"),

@@ -9,7 +9,9 @@ enum VerificationStatus {
 
 class Medication {
   String id;
-  String userId; // Added userId
+  final String caregiverId; // Used instead of profileId
+  String userId;
+  String patientId; // New field added
   String sicknessName;
   String medicationName;
   String prescription;
@@ -19,7 +21,9 @@ class Medication {
 
   Medication({
     required this.id,
-    required this.userId, // Added userId
+    required this.userId,
+    required this.caregiverId, // Used instead of profileId
+    required this.patientId, // New field added
     required this.sicknessName,
     required this.medicationName,
     required this.prescription,
@@ -30,39 +34,52 @@ class Medication {
 
   factory Medication.fromJson(Map<String, dynamic> json) {
     return Medication(
-      id: json['id'],
-      userId: json['userId'], // Added userId
-      sicknessName: json['sicknessName'],
-      medicationName: json['medicationName'],
-      prescription: json['prescription'],
-      alarms: (json['alarms'] as List<dynamic>)
-          .map((e) => MedicationTime.fromJson(e))
-          .toList(),
-      isVerified: json['isVerified'],
-      verificationDate: DateTime.parse(json['verificationDate']),
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      caregiverId: json['caregiverId'] ?? '', // Used instead of profileId
+      patientId: json['patientId'] ?? '', // New field added
+      sicknessName: json['sicknessName'] ?? '',
+      medicationName: json['medicationName'] ?? '',
+      prescription: json['prescription'] ?? '',
+      alarms: (json['alarms'] as List<dynamic>?)
+              ?.map((e) => MedicationTime.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      isVerified: json['isVerified'] ?? false,
+      verificationDate: json['verificationDate'] != null
+          ? DateTime.parse(json['verificationDate'])
+          : DateTime.now(), // Default to now if date is null
     );
   }
 
   factory Medication.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> json = doc.data() as Map<String, dynamic>;
+    final data =
+        doc.data() as Map<String, dynamic>; // Cast to Map<String, dynamic>
     return Medication(
       id: doc.id,
-      userId: json['userId'], // Added userId
-      sicknessName: json['sicknessName'],
-      medicationName: json['medicationName'],
-      prescription: json['prescription'],
-      alarms: (json['alarms'] as List<dynamic>)
-          .map((e) => MedicationTime.fromJson(e))
-          .toList(),
-      isVerified: json['isVerified'],
-      verificationDate: DateTime.parse(json['verificationDate']),
+      userId: data['userId'] ?? '',
+      caregiverId: data['caregiverId'] ?? '', // Used instead of profileId
+      patientId: data['patientId'] ?? '', // New field added
+      sicknessName: data['sicknessName'] ?? '',
+      medicationName: data['medicationName'] ?? '',
+      prescription: data['prescription'] ?? '',
+      alarms: (data['alarms'] as List<dynamic>?)
+              ?.map((e) => MedicationTime.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      isVerified: data['isVerified'] ?? false,
+      verificationDate: data['verificationDate'] != null
+          ? DateTime.parse(data['verificationDate'])
+          : DateTime.now(), // Default to now if date is null
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'userId': userId, // Added userId
+      'userId': userId,
+      'caregiverId': caregiverId, // Used instead of profileId
+      'patientId': patientId, // New field added
       'sicknessName': sicknessName,
       'medicationName': medicationName,
       'prescription': prescription,
@@ -105,8 +122,8 @@ class MedicationTime {
 
   factory MedicationTime.fromJson(Map<String, dynamic> json) {
     return MedicationTime(
-      hour: json['hour'],
-      minute: json['minute'],
+      hour: json['hour'] ?? 0,
+      minute: json['minute'] ?? 0,
     );
   }
 

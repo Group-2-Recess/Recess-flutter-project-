@@ -1,10 +1,11 @@
+// user_details_form.dart
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_page.dart'; // Adjust path as per your project structure
+
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserDetailsForm extends StatefulWidget {
-  final String userId; // Added userId as a parameter
+  final String userId;
 
   const UserDetailsForm({Key? key, required this.userId}) : super(key: key);
 
@@ -24,41 +25,13 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Prepare user details data
       final Map<String, dynamic> userDetailsData = {
         'illness': _illness,
         'medication': _medication,
         'prescription': _prescription,
         'reminder': _reminder,
-        'timestamp': FieldValue.serverTimestamp(), // Optional: add a timestamp
+        'timestamp': FieldValue.serverTimestamp(),
       };
-
-      try {
-        // Save user details data to Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .add(userDetailsData);
-
-        // Show confirmation and navigate to the Home page
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User details saved successfully!')),
-        );
-
-        // Navigate to the HomePage with userId
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                HomePage(userId: widget.userId), // Pass userId to HomePage
-          ),
-          (route) => false, // Remove all previous routes
-        );
-      } catch (e) {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving user details: $e')),
-        );
-      }
     }
   }
 
@@ -74,7 +47,7 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true, // Center align the title
+        centerTitle: true,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -100,120 +73,106 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
                   borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.pink[300]!,
+                      color: Colors.black26,
                       blurRadius: 10.0,
                       spreadRadius: 2.0,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0.0, 5.0),
                     ),
                   ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: <Widget>[
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Illness',
-                            prefixIcon: Icon(FontAwesomeIcons.virus),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your illness';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            _illness = value!;
-                          },
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Enter your medication details:',
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 16.0),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Medication',
-                            prefixIcon: Icon(FontAwesomeIcons.capsules),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your medication';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            _medication = value!;
-                          },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Illness',
+                          prefixIcon: Icon(Icons.local_hospital),
                         ),
-                        const SizedBox(height: 16.0),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/prescription-details', // Adjust as needed
-                            );
-                          },
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Prescription/Medicine(s)',
-                              prefixIcon: Icon(FontAwesomeIcons.pills),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your prescription/medicine(s)';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              _prescription = value!;
-                            },
-                            enabled: false, // Make it non-editable
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your illness';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _illness = value!;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Medication',
+                          prefixIcon: Icon(Icons.medical_services),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your medication';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _medication = value!;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Prescription',
+                          prefixIcon: Icon(Icons.receipt),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your prescription';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _prescription = value!;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Reminder',
+                          prefixIcon: Icon(FontAwesomeIcons.solidClock),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your reminder';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _reminder = value!;
+                        },
+                        enabled: false,
+                      ),
+                      const SizedBox(height: 16.0),
+                      ElevatedButton(
+                        onPressed: _saveUserDetails,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.pink,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0, vertical: 12.0),
+                          textStyle: const TextStyle(fontSize: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        const SizedBox(height: 16.0),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/reminder', // Adjust as needed
-                            );
-                          },
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Reminder',
-                              prefixIcon: Icon(FontAwesomeIcons.bell),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a reminder for taking medication';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              _reminder = value!;
-                            },
-                            enabled: false, // Make it non-editable
-                          ),
-                        ),
-                        const SizedBox(height: 20.0),
-                        ElevatedButton(
-                          onPressed: _saveUserDetails,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.pink[500], // Updated to backgroundColor
-                            foregroundColor:
-                                Colors.white, // Updated to foregroundColor
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          child: const Text('Submit'),
-                        ),
-                      ],
-                    ),
+                        child: const Text('Save Details'),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -1,11 +1,11 @@
-// CaregiverPage.dart
-
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:medical_reminder/resources/add.dart';
 import 'package:medical_reminder/utils.dart';
-import 'package:medical_reminder/Components/Screens/home_page.dart';
+import 'package:medical_reminder/Components/Screens/home_page.dart'; // Import the HomePage
+import 'package:medical_reminder/firestore_service.dart'; // Import FirestoreService
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CaregiverPage extends StatefulWidget {
   const CaregiverPage({Key? key}) : super(key: key);
@@ -21,7 +21,7 @@ class _CaregiverPageState extends State<CaregiverPage> {
   final TextEditingController organisationController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
 
-  selectImage() async {
+  Future<void> selectImage() async {
     Uint8List? img = await pickImage(ImageSource.gallery);
     if (img != null) {
       setState(() {
@@ -30,54 +30,43 @@ class _CaregiverPageState extends State<CaregiverPage> {
     }
   }
 
-  void saveProfile() async {
+  Future<void> saveProfile() async {
     if (!formKey.currentState!.validate()) {
-      print("Form validation failed");
       return;
     }
-
-    if (_image == null) {
-      print("Image is null");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image')),
-      );
-      return;
-    }
-
-    String names = nameController.text;
-    String organisationName = organisationController.text;
-    String location = locationController.text;
 
     try {
-      print("Saving data...");
-
-      String resp = await StoreData().saveData(
-        names: names,
-        organisationName: organisationName,
-        location: location,
-        file: _image!,
-      );
-
-      if (resp == 'Success') {
-        print("Data saved successfully");
-        // Replace 'userId' with the actual user ID
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                HomePage(userId: ''), // Pass the actual userId here
-          ),
-        );
-      } else {
-        print("Data saving failed");
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(resp)),
+          const SnackBar(content: Text('No user is logged in')),
         );
+        return;
       }
+
+      final userId = user.uid;
+      final caregiverData = {
+        'name': nameController.text,
+        'organisation': organisationController.text,
+        'location': locationController.text,
+        'image': _image != null ? _image!.toList() : null,
+      };
+
+      final firestoreService = FirestoreService();
+      await firestoreService.saveCaregiverProfile(userId, caregiverData);
+
+      // Retrieve profile ID and navigate to HomePage
+      String profileId = await firestoreService.getProfileId(userId);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(), // No parameters
+        ),
+      );
     } catch (e) {
-      print("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred')),
+        SnackBar(content: Text('Error saving profile: $e')),
       );
     }
   }
@@ -85,83 +74,133 @@ class _CaregiverPageState extends State<CaregiverPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[100],
       appBar: AppBar(
-        backgroundColor: Colors.pink[100],
-        elevation: 0.0,
-        title: const Text(
-          'Caregiver Profile',
-          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Caregiver Page'),
+        backgroundColor: Colors.teal,
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: formKey,
-              child: Column(
-                children: [
-                  SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage:
-                        _image != null ? MemoryImage(_image!) : null,
-                    child: _image == null
-                        ? IconButton(
-                            icon: Icon(Icons.camera_alt, size: 50),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            'https://c8.alamy.com/comp/D91YB6/beautiful-medical-nurse-portrait-in-office-D91YB6.jpg',
+            fit: BoxFit.cover,
+            color: Colors.black.withOpacity(0.5),
+            colorBlendMode: BlendMode.darken,
+          ),
+          Form(
+            key: formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                const SizedBox(height: 36),
+                const Text(
+                  'Create your nurse/caregiver profile here',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 36),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 64,
+                          backgroundImage: _image != null
+                              ? MemoryImage(_image!)
+                              : const NetworkImage(
+                                  'https://t4.ftcdn.net/jpg/05/49/98/39/360_F_549983970_bRCkYfk0P6PP5fKbMhZMIb07mCJ6esXL.jpg',
+                                ) as ImageProvider,
+                        ),
+                        Positioned(
+                          bottom: -10,
+                          left: 80,
+                          child: IconButton(
+                            icon: const Icon(Icons.add_a_photo),
                             onPressed: selectImage,
-                          )
-                        : null,
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your name' : null,
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: organisationController,
-                    decoration: InputDecoration(
-                      labelText: 'Organisation',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
+                  ],
+                ),
+                const SizedBox(height: 36),
+                buildNames(),
+                const SizedBox(height: 36),
+                buildOrganisationName(),
+                const SizedBox(height: 36),
+                buildLocation(),
+                const SizedBox(height: 36),
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
+                      textStyle: const TextStyle(fontSize: 16),
                     ),
-                    validator: (value) => value!.isEmpty
-                        ? 'Please enter your organisation name'
-                        : null,
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: locationController,
-                    decoration: InputDecoration(
-                      labelText: 'Location',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your location' : null,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
                     onPressed: saveProfile,
-                    child: Text('Save Profile'),
+                    child: const Text('Save Profile'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+  Widget buildNames() => TextFormField(
+        controller: nameController,
+        decoration: const InputDecoration(
+          labelText: "FULL NAMES",
+          border: OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.pink,
+          contentPadding: EdgeInsets.all(16),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your name';
+          }
+          return null;
+        },
+      );
+
+  Widget buildOrganisationName() => TextFormField(
+        controller: organisationController,
+        decoration: const InputDecoration(
+          labelText: "ORGANISATION NAME",
+          border: OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.pink,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your organization';
+          }
+          return null;
+        },
+      );
+
+  Widget buildLocation() => TextFormField(
+        controller: locationController,
+        decoration: const InputDecoration(
+          labelText: "LOCATION",
+          border: OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.pink,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your location';
+          }
+          return null;
+        },
+      );
 }

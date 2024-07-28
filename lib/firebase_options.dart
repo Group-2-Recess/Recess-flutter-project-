@@ -41,12 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAKgFWQORkRCnQPxAQK3wqAoodqzA-8oO8',
-    appId: '1:179966136343:web:c720d723508a63c0b9cc52',
-    messagingSenderId: '179966136343',
-    projectId: 'firebase-auth-007',
-    authDomain: 'fir-auth-007-83338.firebaseapp.com',
-    storageBucket: 'firebase-auth-007.appspot.com',
+    apiKey: 'AIzaSyCMeU0NysPEF_zf09VXRCKifZWOMNhhc1U',
+    appId: '1:564875037088:web:6aa8a55d90c535b12abcc5',
+    messagingSenderId: '564875037088',
+    projectId: 'medical-reminder-app-8ce9e',
+    authDomain: 'medical-reminder-app-8ce9e.firebaseapp.com',
+    storageBucket: 'medical-reminder-app-8ce9e.appspot.com',
+    measurementId: 'G-W8LTEGW3DR',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
