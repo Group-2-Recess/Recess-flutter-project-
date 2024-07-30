@@ -26,7 +26,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserData() async {
-    final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc(widget.userId);
+    final userRef = FirebaseFirestore.instance
+        .collection('patient_profiles')
+        .doc(widget.userId);
     final doc = await userRef.get();
 
     if (doc.exists) {
@@ -34,13 +36,16 @@ class _ProfilePageState extends State<ProfilePage> {
         _firstName = doc['firstName'] ?? '';
         _lastName = doc['lastName'] ?? '';
         _dateOfBirth = (doc['dateOfBirth'] as Timestamp).toDate();
-        _profileImage = doc['profileImagePath'] != null ? File(doc['profileImagePath']) : null;
+        _profileImage = doc['profileImagePath'] != null
+            ? File(doc['profileImagePath'])
+            : null;
       });
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().getImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
@@ -64,8 +69,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> updateProfileData() async {
-    final userRef = FirebaseFirestore.instance.collection('patient_profiles').doc(widget.userId);
-    
+    final userRef = FirebaseFirestore.instance
+        .collection('patient_profiles')
+        .doc(widget.userId);
+
     await userRef.update({
       'firstName': _firstName,
       'lastName': _lastName,
@@ -75,7 +82,8 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     // Optionally show a confirmation message
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Profile updated successfully!")));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("Profile updated successfully!")));
   }
 
   @override
@@ -149,7 +157,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         readOnly: true,
                         decoration: InputDecoration(
                           labelText: _dateOfBirth != null
-                              ? 'Date of Birth: ${_dateOfBirth!.toLocal()}'.split(' ')[0]
+                              ? 'Date of Birth: ${_dateOfBirth!.toLocal()}'
+                                  .split(' ')[0]
                               : 'Select Date of Birth',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),

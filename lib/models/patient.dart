@@ -1,110 +1,67 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'medication.dart';
-import 'verification_record.dart';
 
 class Patient {
   String id;
-  String userId; // Added userId
-  String profileId; // Added profileId
-  String caregiverId; // Added caregiverId
-  String name;
-  String location;
-  String gender;
-  String doctor;
-  List<Medication> medications;
-  List<VerificationRecord> verificationRecords;
+  final String name;
+  final String address;
+  final String? gender;
+  final String doctor;
+  final List<Medication> medications;
 
   Patient({
     required this.id,
-    required this.userId, // Added userId
-    required this.profileId, // Added profileId
-    required this.caregiverId, // Added caregiverId
     required this.name,
-    required this.location,
-    required this.gender,
+    required this.address,
+    this.gender,
     required this.doctor,
-    required this.medications,
-    required this.verificationRecords,
+    this.medications = const [],
   });
 
-  factory Patient.fromDocumentSnapshot(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
+  factory Patient.fromFirestore(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
     return Patient(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      profileId: data['profileId'] ?? '',
-      caregiverId: data['caregiverId'] ?? '', // Added caregiverId
+      id: snapshot.id,
       name: data['name'] ?? '',
-      location: data['location'] ?? '',
+      address: data['address'] ?? '',
       gender: data['gender'] ?? '',
       doctor: data['doctor'] ?? '',
-      medications: (data['medications'] as List<dynamic>?)
-              ?.map((e) => Medication.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      verificationRecords: (data['verificationRecords'] as List<dynamic>?)
-              ?.map(
-                  (e) => VerificationRecord.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      medications: _convertMedications(data['medications'] ?? []),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  static List<Medication> _convertMedications(List<dynamic> data) {
+    return data
+        .map((medicationData) => Medication.fromJson(medicationData))
+        .toList();
+  }
+
+  Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId, // Added userId
-      'profileId': profileId, // Added profileId
-      'caregiverId': caregiverId, // Added caregiverId
       'name': name,
-      'location': location,
+      'address': address,
       'gender': gender,
       'doctor': doctor,
-      'medications': medications.map((e) => e.toJson()).toList(),
-      'verificationRecords':
-          verificationRecords.map((e) => e.toJson()).toList(),
+      'medications':
+          medications.map((medication) => medication.toJson()).toList(),
     };
   }
 
-  static Patient empty() {
-    return Patient(
-      id: '',
-      userId: '', // Added userId
-      profileId: '', // Added profileId
-      caregiverId: '', // Added caregiverId
-      name: '',
-      location: '',
-      gender: '',
-      doctor: '',
-      medications: [],
-      verificationRecords: [],
-    );
-  }
-
-  // CopyWith method
   Patient copyWith({
     String? id,
-    String? userId,
-    String? profileId,
-    String? caregiverId,
     String? name,
-    String? location,
+    String? address,
     String? gender,
     String? doctor,
     List<Medication>? medications,
-    List<VerificationRecord>? verificationRecords,
   }) {
     return Patient(
       id: id ?? this.id,
-      userId: userId ?? this.userId,
-      profileId: profileId ?? this.profileId,
-      caregiverId: caregiverId ?? this.caregiverId,
       name: name ?? this.name,
-      location: location ?? this.location,
+      address: address ?? this.address,
       gender: gender ?? this.gender,
       doctor: doctor ?? this.doctor,
       medications: medications ?? this.medications,
-      verificationRecords: verificationRecords ?? this.verificationRecords,
     );
   }
 }

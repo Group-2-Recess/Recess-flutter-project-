@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:medical_reminder/firebase_options.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 import 'package:medical_reminder/Components/Screens/signup.dart';
@@ -13,15 +14,39 @@ import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/models/medication.dart';
 import 'package:medical_reminder/Components/Screens/medication_detail.dart';
 import 'package:medical_reminder/firestore_service.dart';
-import 'package:medical_reminder/components/screens/medication_verification_page.dart';
+import 'package:medical_reminder/components/screens/verification.dart';
 import 'package:uuid/uuid.dart';
 import 'package:medical_reminder/Components/Screens/patient_list.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher'); // Default app icon
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // Create notification channel
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    description: 'This channel is used for important notifications.',
+    importance: Importance.high,
+    playSound: true,
+  );
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
   runApp(const MyApp());
 }
 

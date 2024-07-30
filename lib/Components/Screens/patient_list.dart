@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/firestore_service.dart';
+import 'package:medical_reminder/models/patient.dart';
+import 'patient_summary_page.dart';
 import 'patient_detail.dart'; // Import PatientDetailPage
-import 'update_patient.dart'; // Import UpdatePatientPage
 
 class PatientListPage extends StatefulWidget {
   final String userId;
   final String caregiverId;
 
-  PatientListPage({required this.userId, required this.caregiverId});
+  const PatientListPage({
+    super.key,
+    required this.userId,
+    required this.caregiverId,
+  });
 
   @override
   _PatientListPageState createState() => _PatientListPageState();
 }
 
 class _PatientListPageState extends State<PatientListPage> {
+  final FirestoreService _firestoreService = FirestoreService();
   List<Patient> patients = [];
-  bool _isLoading = true; // Add loading state
 
   @override
   void initState() {
@@ -26,43 +30,65 @@ class _PatientListPageState extends State<PatientListPage> {
 
   Future<void> _fetchPatients() async {
     try {
-      List<Patient> fetchedPatients = await FirestoreService()
-          .getPatients(widget.userId, widget.caregiverId);
+      // Fetch patients for the specific caregiver ID
+      final fetchedPatients =
+          await _firestoreService.getPatients(widget.caregiverId);
       setState(() {
         patients = fetchedPatients;
-        _isLoading = false; // Set loading state to false when data is fetched
       });
     } catch (e) {
       print('Error fetching patients: $e');
-      setState(() {
-        _isLoading =
-            false; // Set loading state to false even if there is an error
-      });
     }
   }
 
-  Future<void> _deletePatient(BuildContext context, String patientId) async {
-    try {
-      await FirestoreService()
-          .deletePatient(widget.userId, widget.caregiverId, patientId);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Patient deleted')));
-      _fetchPatients(); // Refresh the patients list
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete patient: $e')));
-    }
+  void _navigateToPatientSummary(Patient patient) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientSummaryPage(
+          userId: widget.userId,
+          caregiverId: widget.caregiverId,
+          patient: patient, // Pass Patient object
+        ),
+      ),
+    );
   }
 
-  void _navigateToAddPatientPage() {
+  void _navigateToEditPatient(Patient patient) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PatientDetailPage(
-          patient: Patient
-              .empty(), // Provide a default empty patient or handle null case
-          profileId: widget
-              .userId, // Assuming profileId is userId for now; adjust if needed
+          userId: widget.userId,
+          caregiverId: widget.caregiverId,
+          patient: patient, // Pass Patient object for editing
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deletePatient(Patient patient) async {
+    try {
+      await _firestoreService.deletePatient(
+        widget.caregiverId,
+        patient.id,
+      );
+      setState(() {
+        patients.remove(patient);
+      });
+    } catch (e) {
+      print('Error deleting patient: $e');
+    }
+  }
+
+  void _navigateToAddPatient() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientDetailPage(
+          userId: widget.userId,
+          caregiverId: widget.caregiverId,
+          // No patient object for adding a new patient
         ),
       ),
     );
@@ -72,65 +98,89 @@ class _PatientListPageState extends State<PatientListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Patient List'),
-        backgroundColor: Colors.teal,
+        title: const Text('Patient List'),
+        backgroundColor: Colors.green[800], // Dark green color for AppBar
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : patients.isEmpty
-              ? Center(child: Text('No patients found'))
-              : ListView.builder(
-                  itemCount: patients.length,
-                  itemBuilder: (context, index) {
-                    final patient = patients[index];
-                    return ListTile(
-                      title: Text(patient.name),
-                      subtitle: Text(patient.location),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PatientDetailPage(
-                              patient: patient,
-                              profileId: widget.userId,
-                            ),
-                          ),
-                        );
-                      },
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UpdatePatientPage(
-                                    userId: widget.userId,
-                                    caregiverId: widget.caregiverId,
-                                    patient: patient,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () =>
-                                _deletePatient(context, patient.id),
-                          ),
-                        ],
+      body: patients.isEmpty
+          ? Center(
+              child: Text('No patients available',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600])))
+          : ListView.builder(
+              itemCount: patients.length,
+              itemBuilder: (context, index) {
+                final patient = patients[index];
+                return Card(
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  elevation: 4,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Text(
+                      patient.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.green[700],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                    subtitle: Text(patient.address,
+                        style: TextStyle(color: Colors.grey[600])),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          _navigateToEditPatient(patient);
+                        } else if (value == 'delete') {
+                          _showDeleteConfirmationDialog(patient);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem<String>(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _navigateToPatientSummary(patient),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddPatientPage,
-        child: Icon(Icons.add), // Plus sign icon
-        backgroundColor: Colors.teal,
-        tooltip: 'Add Patient', // Tooltip text when hovering over the button
+        onPressed: _navigateToAddPatient,
+        backgroundColor: Colors.green[600], // Green color for FAB
+        child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(Patient patient) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Patient'),
+          content: Text('Are you sure you want to delete ${patient.name}?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _deletePatient(patient);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

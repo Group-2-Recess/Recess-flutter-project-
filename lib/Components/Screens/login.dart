@@ -1,9 +1,9 @@
-import 'package:medical_reminder/Components/Screens/signup.dart';
-import 'package:medical_reminder/services/auth_service.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medical_reminder/Components/Screens/home_page.dart';
+import 'package:medical_reminder/Components/Screens/signup.dart';
+import 'package:medical_reminder/services/auth_service.dart';
+import 'package:medical_reminder/selection_page.dart';
+import 'package:flutter/gestures.dart';
 
 class Login extends StatelessWidget {
   Login({super.key});
@@ -56,17 +56,11 @@ class Login extends StatelessWidget {
                           fontSize: 32)),
                 ),
               ),
-              const SizedBox(
-                height: 80,
-              ),
+              const SizedBox(height: 80),
               _emailAddress(),
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               _password(),
-              const SizedBox(
-                height: 50,
-              ),
+              const SizedBox(height: 50),
               _signin(context),
             ],
           ),
@@ -77,7 +71,6 @@ class Login extends StatelessWidget {
 
   Widget _emailAddress() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -88,30 +81,30 @@ class Login extends StatelessWidget {
                   fontWeight: FontWeight.normal,
                   fontSize: 16)),
         ),
-        const SizedBox(
-          height: 16,
-        ),
+        const SizedBox(height: 16),
         TextField(
           controller: _emailController,
           decoration: InputDecoration(
               filled: true,
-              hintText: 'enter your e-mail',
+              hintText: 'Enter your e-mail',
               hintStyle: const TextStyle(
                   color: Color(0xff6A6A6A),
                   fontWeight: FontWeight.normal,
                   fontSize: 14),
-              fillColor: const Color(0xffF7F7F9),
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
+                  borderSide:
+                      const BorderSide(color: Color(0xff00796B), width: 2),
                   borderRadius: BorderRadius.circular(14))),
-        )
+        ),
       ],
     );
   }
 
   Widget _password() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -122,19 +115,20 @@ class Login extends StatelessWidget {
                   fontWeight: FontWeight.normal,
                   fontSize: 16)),
         ),
-        const SizedBox(
-          height: 16,
-        ),
+        const SizedBox(height: 16),
         TextField(
           obscureText: true,
           controller: _passwordController,
           decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xffF7F7F9),
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
+                  borderSide:
+                      const BorderSide(color: Color(0xff00796B), width: 2),
                   borderRadius: BorderRadius.circular(14))),
-        )
+        ),
       ],
     );
   }
@@ -142,7 +136,8 @@ class Login extends StatelessWidget {
   Widget _signin(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xff0D6EFD),
+        backgroundColor:
+            const Color.fromARGB(255, 37, 195, 71), // Green button color
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -157,12 +152,18 @@ class Login extends StatelessWidget {
         );
 
         if (result) {
-          // Handle successful sign-in, if needed
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const SelectionPage()),
+          );
         } else {
           // Handle sign-in failure, if needed
         }
       },
-      child: Text('Sign In'),
+      child: const Text(
+        'Sign In',
+        style: TextStyle(color: Colors.white), // White text for contrast
+      ),
     );
   }
 
@@ -170,29 +171,35 @@ class Login extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(children: [
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          children: [
             const TextSpan(
               text: "New User? ",
               style: TextStyle(
-                  color: Color(0xff6A6A6A),
-                  fontWeight: FontWeight.normal,
-                  fontSize: 16),
+                color: Color(0xff6A6A6A),
+                fontWeight: FontWeight.normal,
+                fontSize: 16,
+              ),
             ),
             TextSpan(
-                text: "Create Account",
-                style: const TextStyle(
-                    color: Color(0xff1A1D1E),
-                    fontWeight: FontWeight.normal,
-                    fontSize: 16),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Signup()),
-                    );
-                  }),
-          ])),
+              text: "Create Account",
+              style: const TextStyle(
+                color: Color(0xff1A1D1E),
+                fontWeight: FontWeight.normal,
+                fontSize: 16,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Signup()),
+                  );
+                },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

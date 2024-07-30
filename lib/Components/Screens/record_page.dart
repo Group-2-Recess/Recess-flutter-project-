@@ -1,65 +1,118 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:medical_reminder/models/medication.dart';
-import 'package:medical_reminder/models/verification_record.dart';
-import 'package:medical_reminder/firestore_service.dart';
-import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:medical_reminder/models/verification.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 
 class RecordPage extends StatefulWidget {
   final String patientId;
-  final String patientName;
-  final String userId;
 
-  RecordPage({
-    required this.patientId,
-    required this.patientName,
-    required this.userId,
-  });
+  RecordPage({Key? key, required this.patientId}) : super(key: key);
 
   @override
   _RecordPageState createState() => _RecordPageState();
 }
 
 class _RecordPageState extends State<RecordPage> {
-  final FirestoreService _firestoreService = FirestoreService();
-  List<Medication> _medications = [];
-  Map<String, List<VerificationRecord>> _verificationRecords = {};
-  bool _isLoading = true;
-  String? _errorMessage;
+  List<Verification> _verifications = [];
 
   @override
   void initState() {
     super.initState();
-    _loadRecords();
+    _fetchLocalVerifications();
   }
 
-  Future<void> _loadRecords() async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      // Fetch medications
-      List<Medication> medications =
-          await _firestoreService.getMedications(widget.patientId);
-      setState(() {
-        _medications = medications;
-      });
+  Future<void> _fetchLocalVerifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    List<Verification> verifications = [];
 
-      // Fetch verification records for each medication
-      for (var medication in medications) {
-        List<VerificationRecord> records = await _firestoreService
-            .getVerificationRecords(widget.patientId, medication.id);
-        setState(() {
-          _verificationRecords[medication.id] = records;
-        });
+    for (String key in keys) {
+      if (key.startsWith('verification_${widget.patientId}_')) {
+        final jsonString = prefs.getString(key);
+        if (jsonString != null) {
+          final jsonData = json.decode(jsonString);
+          final verification = Verification.fromJson(jsonData);
+          verifications.add(verification);
+        }
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error loading records: $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+    }
+
+    setState(() {
+      _verifications = verifications;
+    });
+  }
+
+  Future<String> _savePdfToFile(List<Verification> verifications) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: <pw.Widget>[
+              pw.Text('Verification Records',
+                  style: pw.TextStyle(fontSize: 24, color: PdfColors.green)),
+              pw.SizedBox(height: 20),
+              ...verifications.map((verification) {
+                return pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: <pw.Widget>[
+                    pw.Text('Medication ID: ${verification.medicationId}',
+                        style:
+                            pw.TextStyle(fontSize: 18, color: PdfColors.black)),
+                    pw.Text('Statement: ${verification.verificationStatement}',
+                        style:
+                            pw.TextStyle(fontSize: 16, color: PdfColors.black)),
+                    pw.Text('Date: ${verification.timestamp}',
+                        style:
+                            pw.TextStyle(fontSize: 16, color: PdfColors.black)),
+                    pw.SizedBox(height: 10),
+                  ],
+                );
+              }).toList(),
+            ],
+          );
+        },
+      ),
+    );
+
+    final outputFile = await getLocalPath();
+    final file = File(outputFile);
+    await file.writeAsBytes(await pdf.save());
+
+    print('PDF saved to $outputFile');
+    return outputFile;
+  }
+
+  Future<String> getLocalPath() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return '${directory.path}/verification_records.pdf';
+  }
+
+  Future<void> _generateAndPrintPdf() async {
+    if (_verifications.isNotEmpty) {
+      try {
+        final path = await _savePdfToFile(_verifications);
+        await Printing.layoutPdf(
+          onLayout: (PdfPageFormat format) async => File(path).readAsBytes(),
+        );
+        print('Printing initiated');
+      } catch (e) {
+        print('Error during PDF generation or printing: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating or printing PDF')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No records to print')),
+      );
     }
   }
 
@@ -67,96 +120,52 @@ class _RecordPageState extends State<RecordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Patient Records for ${widget.patientName}'),
-        backgroundColor: Colors.teal,
+        title: Text('Verification Records'),
+        backgroundColor: Colors.green[800], // Dark green color for AppBar
         actions: [
           IconButton(
             icon: Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              // Implement PDF generation here if needed
-            },
+            onPressed: _generateAndPrintPdf,
+            color: Colors.white,
           ),
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Medications:',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      SizedBox(height: 8.0),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: _medications.length,
-                          itemBuilder: (context, index) {
-                            final medication = _medications[index];
-                            final verificationRecords =
-                                _verificationRecords[medication.id] ?? [];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Medication: ${medication.medicationName}', // Updated property
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall,
-                                    ),
-                                    Text(
-                                        'Dosage: ${medication.prescription}'), // Updated field
-                                    SizedBox(height: 8.0),
-                                    if (medication.alarms != null &&
-                                        medication.alarms!.isNotEmpty)
-                                      Text(
-                                        'Alarms:',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineSmall,
-                                      ),
-                                    if (medication.alarms != null &&
-                                        medication.alarms!.isNotEmpty)
-                                      ...medication.alarms!.map((alarm) {
-                                        return Text(
-                                          'Alarm: ${DateFormat.jm().format(alarm as DateTime)}', // Display alarm time
-                                        );
-                                      }).toList(),
-                                    SizedBox(height: 8.0),
-                                    Text(
-                                      'Verification Records:',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall,
-                                    ),
-                                    ...verificationRecords.isNotEmpty
-                                        ? verificationRecords.map((record) {
-                                            return Text(
-                                              'Taken: ${record.taken ? 'Yes' : 'No'}, Date: ${DateFormat.yMd().format(record.time)}', // Updated fields
-                                            );
-                                          }).toList()
-                                        : [
-                                            Text(
-                                                'No verification records found')
-                                          ],
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+      body: _verifications.isEmpty
+          ? Center(
+              child: Text('No verification records available',
+                  style: TextStyle(fontSize: 18, color: Colors.green[700])))
+          : ListView.builder(
+              itemCount: _verifications.length,
+              itemBuilder: (context, index) {
+                final verification = _verifications[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  elevation: 5.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
-                ),
+                  color: Colors.green[50], // Light green color for the Card
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16.0),
+                    title: Text(
+                      verification.verificationStatement,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800], // Dark green color for title
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Date: ${verification.timestamp.toLocal()}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

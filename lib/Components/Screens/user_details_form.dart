@@ -53,11 +53,11 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
         decoration: BoxDecoration(
           gradient: RadialGradient(
             colors: [
-              Colors.pink[100]!,
-              Colors.pink[200]!,
-              Colors.pink[300]!,
-              Colors.pink[400]!,
-              Colors.pink[500]!,
+              Color.fromARGB(255, 8, 228, 81)!,
+              Color.fromARGB(255, 8, 228, 81)!,
+              Color.fromARGB(255, 8, 228, 81)!,
+              Color.fromARGB(255, 8, 228, 81)!,
+              Color.fromARGB(255, 8, 228, 81)!,
             ],
             center: Alignment(0.0, 0.0),
             radius: 1.5,
@@ -162,7 +162,8 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
                       ElevatedButton(
                         onPressed: _saveUserDetails,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink,
+                          backgroundColor:
+                              const Color.fromARGB(255, 30, 233, 84),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24.0, vertical: 12.0),
                           textStyle: const TextStyle(fontSize: 18),

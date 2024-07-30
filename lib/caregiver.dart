@@ -76,7 +76,7 @@ class _CaregiverPageState extends State<CaregiverPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Caregiver Page'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.green,
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -120,7 +120,8 @@ class _CaregiverPageState extends State<CaregiverPage> {
                           bottom: -10,
                           left: 80,
                           child: IconButton(
-                            icon: const Icon(Icons.add_a_photo),
+                            icon: const Icon(Icons.add_a_photo,
+                                color: Colors.white),
                             onPressed: selectImage,
                           ),
                         ),
@@ -138,7 +139,7 @@ class _CaregiverPageState extends State<CaregiverPage> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 15),
                       textStyle: const TextStyle(fontSize: 16),
@@ -157,12 +158,13 @@ class _CaregiverPageState extends State<CaregiverPage> {
 
   Widget buildNames() => TextFormField(
         controller: nameController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: "FULL NAMES",
           border: OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.pink,
+          fillColor: Colors.white,
           contentPadding: EdgeInsets.all(16),
+          labelStyle: TextStyle(color: Colors.green),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -174,11 +176,12 @@ class _CaregiverPageState extends State<CaregiverPage> {
 
   Widget buildOrganisationName() => TextFormField(
         controller: organisationController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: "ORGANISATION NAME",
           border: OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.pink,
+          fillColor: Colors.white,
+          labelStyle: TextStyle(color: Colors.green),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -190,11 +193,12 @@ class _CaregiverPageState extends State<CaregiverPage> {
 
   Widget buildLocation() => TextFormField(
         controller: locationController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: "LOCATION",
           border: OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.pink,
+          fillColor: Colors.white,
+          labelStyle: TextStyle(color: Colors.green),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
