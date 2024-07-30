@@ -146,17 +146,19 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[100],
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.pink[100],
-        elevation: 0.0,
+        backgroundColor: Colors.pink[300],
+        elevation: 2.0,
         title: Text(
           'Create Your Patient Profile',
           style: TextStyle(
-            fontSize: 24.0,
+            fontSize: 22.0,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -170,11 +172,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 80.0,
+                    backgroundColor: Colors.grey[300],
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
                         : null,
                     child: _profileImage == null
-                        ? Icon(Icons.add_a_photo, size: 40.0)
+                        ? Icon(Icons.add_a_photo,
+                            size: 40.0, color: Colors.grey[600])
                         : null,
                   ),
                 ),
@@ -187,37 +191,50 @@ class _ProfilePageState extends State<ProfilePage> {
                         decoration: InputDecoration(
                           labelText: 'First Name',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 12.0),
                         ),
                         onSaved: (value) => _firstName = value!,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your first name'
                             : null,
                       ),
-                      SizedBox(height: 10.0),
+                      SizedBox(height: 16.0),
                       TextFormField(
                         decoration: InputDecoration(
                           labelText: 'Last Name',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 12.0),
                         ),
                         onSaved: (value) => _lastName = value!,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your last name'
                             : null,
                       ),
-                      SizedBox(height: 10.0),
+                      SizedBox(height: 16.0),
                       TextFormField(
                         readOnly: true,
                         decoration: InputDecoration(
                           labelText: 'Date of Birth',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 12.0),
                           suffixIcon: IconButton(
-                            icon: Icon(Icons.calendar_today),
+                            icon: Icon(Icons.calendar_today,
+                                color: Colors.pink[300]),
                             onPressed: () => _selectDate(context),
                           ),
                         ),
@@ -231,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               : "${_dateOfBirth!.toLocal()}".split(' ')[0],
                         ),
                       ),
-                      SizedBox(height: 20.0),
+                      SizedBox(height: 24.0),
                       ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
@@ -239,7 +256,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             await _saveProfile();
                           }
                         },
-                        child: Text('Submit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(
+                              255, 55, 210, 91), // Background color
+                          padding: EdgeInsets.symmetric(
+                              vertical: 14.0, horizontal: 24.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
                       ),
                     ],
                   ),

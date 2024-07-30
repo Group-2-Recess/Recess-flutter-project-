@@ -11,27 +11,20 @@ class SelectionPage extends StatelessWidget {
 
   Future<void> _navigateToNextPage(BuildContext context, String userId) async {
     try {
-      // Reference to the 'users' collection to get the user document
       final userDoc =
           FirebaseFirestore.instance.collection('users').doc(userId);
-
-      // Get the user document
       final userSnapshot = await userDoc.get();
 
       if (userSnapshot.exists) {
         String role = userSnapshot.data()?['role'] ?? '';
 
         if (role == 'caregiver') {
-          // Reference to the 'caregiver_profiles' subcollection
           final caregiverProfilesCollection =
               userDoc.collection('caregiver_profiles');
-
-          // Get the first document in the 'caregiver_profiles' collection
           final caregiverProfilesQuery =
               await caregiverProfilesCollection.limit(1).get();
 
           if (caregiverProfilesQuery.docs.isNotEmpty) {
-            // If there are caregiver profiles, navigate to HomePage
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -39,7 +32,6 @@ class SelectionPage extends StatelessWidget {
               ),
             );
           } else {
-            // If no caregiver profiles, navigate to CaregiverPage
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -48,15 +40,12 @@ class SelectionPage extends StatelessWidget {
             );
           }
         } else if (role == 'patient') {
-          // Reference to the 'patient_profiles' subcollection
           final patientProfilesCollection =
               userDoc.collection('patient_profiles');
-
           final patientProfilesQuery =
               await patientProfilesCollection.limit(1).get();
 
           if (patientProfilesQuery.docs.isNotEmpty) {
-            // If there are patient profiles, navigate to UserDetailsForm
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -64,7 +53,6 @@ class SelectionPage extends StatelessWidget {
               ),
             );
           } else {
-            // If no patient profiles, navigate to ProfilePage
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -74,7 +62,6 @@ class SelectionPage extends StatelessWidget {
           }
         }
       } else {
-        // If the user document does not exist, navigate to ProfilePage
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -91,12 +78,13 @@ class SelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the current user ID from FirebaseAuth
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('ARE YOU? Tell us more about you')),
+        title: const Text('ARE YOU? Tell us more about you'),
+        centerTitle: true,
+        backgroundColor: Colors.green[800], // Dark green for AppBar
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -113,10 +101,12 @@ class SelectionPage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
+                    backgroundColor:
+                        Colors.green[700], // Darker green button color
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24.0, vertical: 12.0),
-                    textStyle: const TextStyle(fontSize: 18),
+                    textStyle: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -133,15 +123,19 @@ class SelectionPage extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text('Are you a Caregiver/Nurse?'),
+                  child: const Text('Are you a Caregiver/Nurse?',
+                      style: TextStyle(
+                          color: Colors.white)), // White text for contrast
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
+                    backgroundColor:
+                        Colors.green[700], // Darker green button color
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24.0, vertical: 12.0),
-                    textStyle: const TextStyle(fontSize: 18),
+                    textStyle: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -158,7 +152,9 @@ class SelectionPage extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text('Are you a Patient?'),
+                  child: const Text('Are you a Patient?',
+                      style: TextStyle(
+                          color: Colors.white)), // White text for contrast
                 ),
               ],
             ),

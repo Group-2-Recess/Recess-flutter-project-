@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:medical_reminder/models/profilemodel.dart';
 import 'package:medical_reminder/caregiver.dart';
-import 'package:medical_reminder/models/verification_record.dart';
+import 'package:medical_reminder/models/verification.dart';
+import 'package:medical_reminder/models/reminder.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -28,27 +29,6 @@ class FirestoreService {
       }
     } else {
       print('No user is signed in.');
-    }
-  }
-
-  Future<void> updateMedicationReminders(String patientId, String medicationId,
-      List<MedicationTime> alarms) async {
-    try {
-      await _db
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .doc(medicationId)
-          .update({
-        'alarms': alarms
-            .map((alarm) => {
-                  'hour': alarm.hour,
-                  'minute': alarm.minute,
-                })
-            .toList(),
-      });
-    } catch (e) {
-      print('Error updating medication reminders: $e');
     }
   }
 
@@ -143,21 +123,6 @@ class FirestoreService {
     }
   }
 
-  Future<void> savePatient(
-      Patient patient, String userId, String profileId) async {
-    if (userId.isEmpty || profileId.isEmpty) {
-      throw Exception('User ID or Profile ID is empty');
-    }
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('caregiver_profiles')
-        .doc(profileId)
-        .collection('patients')
-        .doc(patient.id)
-        .set(patient.toJson());
-  }
-
   // Method to delete a patient by ID under a caregiver profile
 
   // Method to fetch patients for a specific caregiver profile
@@ -178,145 +143,12 @@ class FirestoreService {
   // Delete patient
 
   // Medication Methods
-  Future<void> addMedicationWithAutoId(
-      String patientId, Medication medication) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .add(medication.toJson());
-      print("Medication added with auto ID");
-    } catch (e) {
-      throw Exception('Error adding medication: $e');
-    }
-  }
-
-  Future<void> addMedicationWithCustomId(String patientId,
-      String customMedicationId, Medication medication) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .doc(customMedicationId)
-          .set(medication.toJson());
-      print("Medication added with custom ID");
-    } catch (e) {
-      throw Exception('Error adding medication: $e');
-    }
-  }
 
   // Add the new methods
 
-  Future<List<Medication>> getMedications(String patientId) async {
-    try {
-      var medicationsSnapshot = await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .get();
-
-      return medicationsSnapshot.docs
-          .map((medDoc) => Medication.fromJson(medDoc.data()))
-          .toList();
-    } catch (e) {
-      throw Exception('Error fetching medications: $e');
-    }
-  }
-
-  Future<void> saveMedicationVerification(String patientId, String medicationId,
-      Map<String, dynamic> verificationData) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .doc(medicationId)
-          .collection('verifications')
-          .add(verificationData);
-      print("Medication verification saved");
-    } catch (e) {
-      throw Exception('Error saving medication verification: $e');
-    }
-  }
-
   // Prescription Methods
-  Future<void> savePrescription(
-      String patientId, Map<String, dynamic> prescriptionData) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('prescriptions')
-          .add(prescriptionData);
-      print("Prescription saved");
-    } catch (e) {
-      throw Exception('Error saving prescription: $e');
-    }
-  }
-
-  Future<void> updatePrescription(String patientId, String prescriptionId,
-      Map<String, dynamic> prescriptionData) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('prescriptions')
-          .doc(prescriptionId)
-          .update(prescriptionData);
-      print("Prescription updated");
-    } catch (e) {
-      throw Exception('Error updating prescription: $e');
-    }
-  }
-
-  Future<void> deletePrescription(
-      String patientId, String prescriptionId) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('prescriptions')
-          .doc(prescriptionId)
-          .delete();
-      print("Prescription deleted");
-    } catch (e) {
-      throw Exception('Error deleting prescription: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getPrescriptions(String patientId) async {
-    try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('prescriptions')
-          .get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      throw Exception('Error fetching prescriptions: $e');
-    }
-  }
 
   // Verification Methods
-
-  Future<List<Map<String, dynamic>>> getPatientRecords(String patientId) async {
-    try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('verificationRecords')
-          .get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      throw Exception('Error fetching records: $e');
-    }
-  }
 
   // Get a Patient by ID
 
@@ -325,39 +157,6 @@ class FirestoreService {
   // Get Medications for a specific Patient
 
   // Save a VerificationRecord for a specific Medication of a specific Patient
-  Future<void> verifyMedication(
-      String patientId, String recordId, bool taken) async {
-    try {
-      await _db
-          .collection('patients')
-          .doc(patientId)
-          .collection('records')
-          .doc(recordId)
-          .update({'taken': taken, 'verificationDate': Timestamp.now()});
-    } catch (e) {
-      throw Exception('Error verifying medication: $e');
-    }
-  }
-
-  Future<List<VerificationRecord>> getVerificationRecords(
-      String patientId, String medicationId) async {
-    QuerySnapshot snapshot = await _db
-        .collection('patients')
-        .doc(patientId)
-        .collection('medications')
-        .doc(medicationId)
-        .collection('verification_records')
-        .get();
-
-    return snapshot.docs
-        .map((doc) => VerificationRecord.fromJson(doc as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<Patient> getPatientById(String patientId) async {
-    final doc = await _db.collection('patients').doc(patientId).get();
-    return Patient.fromDocumentSnapshot(doc);
-  }
 
   Future<void> updateMedicationVerification(
       String patientId, String medicationId, bool verificationStatus) async {
@@ -407,208 +206,437 @@ class FirestoreService {
     }
   }
 
-  Future<void> addPatient(
-    String userId,
-    String caregiverId,
-    Map<String, dynamic> patientData,
-  ) async {
-    final patientsCollection = _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('caregiver_profiles')
-        .doc(caregiverId)
-        .collection('patients');
-
-    await patientsCollection.add(patientData);
-  }
-
-  Future<List<Patient>> getPatients(
-    String userId,
-    String caregiverId,
-  ) async {
+  Future<void> addPatient(String caregiverId, Patient patient) async {
     try {
-      QuerySnapshot snapshot = await _firestore
+      final docRef = await _firestore
           .collection('users')
-          .doc(userId)
-          .collection('caregiver_profiles')
-          .doc(caregiverId)
-          .collection('patients')
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        return []; // Return an empty list if no documents are found
-      }
-
-      return snapshot.docs
-          .map((doc) => Patient.fromDocumentSnapshot(doc))
-          .toList();
-    } catch (e) {
-      print('Error in getPatients: $e');
-      throw e;
-    }
-  }
-
-  Future<void> deletePatient(
-    String userId,
-    String caregiverId,
-    String patientId,
-  ) async {
-    final patientDoc = _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('caregiver_profiles')
-        .doc(caregiverId)
-        .collection('patients')
-        .doc(patientId);
-
-    await patientDoc.delete();
-  }
-
-  Future<List<Medication>> fetchMedicationsForPatient(
-    String userId,
-    String caregiverId,
-    String patientId,
-  ) async {
-    try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('caregiver_profiles')
-          .doc(caregiverId)
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        return []; // Return an empty list if no documents are found
-      }
-
-      return snapshot.docs
-          .map((doc) =>
-              Medication.fromFirestore(doc)) // Pass DocumentSnapshot directly
-          .toList();
-    } catch (e) {
-      print('Error in fetchMedicationsForPatient: $e');
-      throw Exception('Failed to fetch medications: $e');
-    }
-  }
-
-  Future<void> addMedication(
-    String userId,
-    String caregiverId,
-    String patientId,
-    Medication medication,
-  ) async {
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('caregiver_profiles')
-        .doc(caregiverId)
-        .collection('patients')
-        .doc(patientId)
-        .collection('medications')
-        .doc(medication.id)
-        .set(medication.toJson());
-  }
-
-// Update an existing medication
-  Future<void> updateMedication(
-    String userId,
-    String caregiverId,
-    String patientId,
-    Medication medication,
-  ) async {
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('caregiver_profiles')
-        .doc(caregiverId)
-        .collection('patients')
-        .doc(patientId)
-        .collection('medications')
-        .doc(medication.id)
-        .update(medication.toJson());
-  }
-
-  // Delete a medication
-  Future<void> deleteMedication(
-      String patientId, String caregiverId, String medicationId) async {
-    try {
-      await _firestore
-          .collection('patients')
-          .doc(patientId)
-          .collection('medications')
-          .doc(medicationId)
-          .delete();
-    } catch (e) {
-      print('Error in deleteMedication: $e');
-      throw e;
-    }
-  }
-
-  Future<void> saveMedication(
-      String patientId, String caregiverId, Medication medication) async {
-    try {
-      await _db
-          .collection('users')
-          .doc(caregiverId) // Reference to the caregiver document
+          .doc(_auth.currentUser!.uid)
           .collection('caregiverProfiles')
-          .doc(caregiverId) // Reference to the caregiver profile document
+          .doc(caregiverId)
           .collection('patients')
-          .doc(patientId) // Reference to the patient document
-          .collection('medications')
-          .doc(medication.id) // Reference to the medication document
-          .set(medication.toJson()); // Save the medication details
+          .add(patient.toFirestore());
+      patient.id = docRef.id; // Assign generated ID to patient object
     } catch (e) {
-      throw Exception('Failed to save medication: $e');
+      // Handle error
+      print('Error adding patient: $e');
+      rethrow; // Rethrow to propagate the error
     }
   }
 
   Future<void> updatePatient(
-      String userId, String caregiverProfileId, Patient patient) async {
-    // Check for non-empty paths
-    if (userId.isEmpty || caregiverProfileId.isEmpty || patient.id.isEmpty) {
-      throw ArgumentError(
-          'User ID, caregiver profile ID, and patient ID must not be empty');
-    }
-
+      String caregiverId, String patientId, Patient patient) async {
     try {
-      await _db.collection('patients').doc(patient.id).update({
-        'name': patient.name,
-        'location': patient.location,
-        'gender': patient.gender,
-        // Add other fields here
-      });
+      await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .update(patient.toFirestore());
     } catch (e) {
-      throw Exception('Failed to update patient: $e');
+      // Handle error
+      print('Error updating patient: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Medication>> getMedications(
+      String caregiverId, String patientId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      final medicationsSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .get();
+
+      final medicationList = medicationsSnapshot.docs
+          .map((doc) => Medication.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      return medicationList;
+    } catch (e) {
+      print('Error fetching medications: $e');
+      return [];
+    }
+  }
+
+  Future<List<Verification>> getVerifications(
+      String caregiverId, String patientId, String medicationId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .doc(medicationId)
+          .collection('verifications')
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => Verification.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      // Handle error
+      print('Error getting verifications: $e');
+      rethrow;
     }
   }
 
   Future<void> addReminder(String userId, String caregiverId, String patientId,
       Map<String, dynamic> reminderData) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('caregivers')
-        .doc(caregiverId)
-        .collection('patients')
-        .doc(patientId)
-        .collection('reminders')
-        .add(reminderData);
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection(
+              'reminders') // You can change the collection name if needed
+          .add(reminderData);
+    } catch (e) {
+      print('Error adding reminder: $e');
+      rethrow;
+    }
   }
 
-  Future<void> saveVerificationRecord(
-      String userId, String patientId, VerificationRecord record) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('patients')
-        .doc(patientId)
-        .collection('verificationRecords')
-        .add(record.toJson());
+  Future<void> saveVerification(
+    String caregiverId,
+    String patientId,
+    String medicationId,
+    Verification verification,
+  ) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('No user is currently logged in');
+    }
+
+    // Print statements for debugging
+    print('Caregiver ID: $caregiverId');
+    print('Patient ID: $patientId');
+    print('Medication ID: $medicationId');
+
+    try {
+      // Add a new document with an auto-generated ID
+      final verificationRef = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .doc(medicationId)
+          .collection('verifications')
+          .add(verification.toJson());
+
+      print('Verification saved with ID: ${verificationRef.id}');
+    } catch (e) {
+      print('Error saving verification: $e');
+      rethrow;
+    }
+  }
+
+  // Fetch patient data by caregiverId and patientId
+
+  Future<Patient?> getPatientById(String patientId) async {
+    try {
+      final docSnapshot = await _db.collection('patients').doc(patientId).get();
+
+      if (docSnapshot.exists) {
+        return Patient.fromFirestore(docSnapshot);
+      } else {
+        print('Patient not found');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching patient: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Patient>> getPatients(String caregiverId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      // Fetch the patients from the specific caregiver's collection
+      final patientsSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .get();
+
+      // Convert the fetched documents into a list of Patient objects
+      final patientList = patientsSnapshot.docs
+          .map((doc) => Patient.fromFirestore(doc))
+          .toList();
+
+      return patientList;
+    } catch (e) {
+      print('Error fetching patients: $e');
+      return [];
+    }
+  }
+
+  // Get Patient details (bio data) by Patient ID
+
+  Future<Patient> getPatientDetails(
+      String caregiverId, String patientId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      final patientSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .get();
+
+      if (!patientSnapshot.exists) {
+        throw Exception('Patient not found');
+      }
+
+      final patientData = patientSnapshot.data()!;
+      final medications = await getMedications(caregiverId, patientId);
+
+      return Patient(
+        id: patientSnapshot.id,
+        name: patientData['name'] ?? '',
+        address: patientData['address'] ?? '',
+        gender: patientData['gender'] ?? '',
+        doctor: patientData['doctor'] ?? '',
+        medications: medications,
+      );
+    } catch (e) {
+      print('Error fetching patient details: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> addMedication(
+      String caregiverId, String patientId, Medication medication) async {
+    try {
+      final medicationMap = medication.toJson();
+      medicationMap['reminders'] =
+          medication.reminders.map((reminder) => reminder.toJson()).toList();
+
+      print('Medication Map: $medicationMap'); // Debugging line
+
+      final docRef = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .add(medicationMap);
+
+      print('Medication added successfully with ID: ${docRef.id}');
+      return docRef.id; // Return the newly created document ID
+    } catch (e) {
+      print('Error adding medication: $e');
+      throw e; // Rethrow the error for further handling if necessary
+    }
+  }
+
+  Future<List<Reminder>> getReminders(
+      String caregiverId, String patientId, String medicationId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      // Debug logs
+      print(
+          'Fetching reminders for caregiverId: $caregiverId, patientId: $patientId, medicationId: $medicationId');
+
+      if (caregiverId.isEmpty || patientId.isEmpty || medicationId.isEmpty) {
+        throw Exception('Caregiver ID, Patient ID, or Medication ID is empty');
+      }
+
+      final remindersSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .doc(medicationId)
+          .collection('reminders')
+          .get();
+
+      return remindersSnapshot.docs
+          .map((doc) => Reminder.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      print('Error fetching reminders: $e');
+      return [];
+    }
+  }
+
+  Future<Patient?> getPatient(String caregiverId, String patientId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently logged in');
+      }
+
+      final docSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .get();
+
+      if (docSnapshot.exists) {
+        return Patient.fromFirestore(docSnapshot);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching patient: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateMedication(
+      String caregiverId, String patientId, Medication medication) async {
+    try {
+      // Convert reminders to maps before saving
+      final medicationMap = medication.toJson();
+      medicationMap['reminders'] =
+          medication.reminders.map((reminder) => reminder.toJson()).toList();
+
+      // Update in Firestore
+      await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .doc(medication.id)
+          .set(
+              medicationMap,
+              SetOptions(
+                  merge:
+                      true)); // Use merge to avoid overwriting existing fields
+
+      print('Medication updated successfully.');
+    } catch (e) {
+      print('Error updating medication: $e');
+      throw e; // Rethrow the error for further handling if necessary
+    }
+  }
+
+  Future<void> addVerification(
+    String caregiverId,
+    String patientId,
+    String medicationId,
+    Verification verification,
+  ) async {
+    try {
+      final verificationMap = verification.toJson();
+
+      // Add the verification record to the Firestore collection
+      await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .doc(medicationId)
+          .collection('verifications')
+          .add(verificationMap);
+
+      print('Verification added successfully.');
+    } catch (e) {
+      print('Error adding verification: $e');
+      throw e; // Re-throw the exception for further handling
+    }
+  }
+
+  Future<void> saveMedication(
+      String caregiverId, String patientId, Medication medication) async {
+    try {
+      // Show loading indicator in UI
+      final docRef = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .collection('medications')
+          .add(medication.toJson());
+
+      // Handle successful save, e.g., show success message
+      print('Medication added successfully with ID: ${docRef.id}');
+    } catch (e) {
+      // Handle error, e.g., show error message
+      print('Error adding medication: $e');
+    } finally {
+      // Hide loading indicator
+    }
+  }
+
+  Future<void> deletePatient(String caregiverId, String patientId) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('caregiverProfiles')
+          .doc(caregiverId)
+          .collection('patients')
+          .doc(patientId)
+          .delete();
+    } catch (e) {
+      // Handle error
+      print('Error deleting patient: $e');
+      rethrow;
+    }
   }
 }
+
+
+
+  
+   
+
+
+
 // Generate a new ID for medication
 
 // Other existing methods

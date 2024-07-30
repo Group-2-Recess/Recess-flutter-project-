@@ -50,10 +50,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[50],
+      backgroundColor: Colors.green[50],
       appBar: AppBar(
         title: Text('Home'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.green[800],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -71,19 +71,19 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 20),
             Text(
-              'Welcome to Pill Reminder App!',
+              'Welcome to Your Patient List!',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.green[800],
               ),
             ),
             SizedBox(height: 10),
             Text(
-              'Never miss a med',
+              'Manage and track patient medications with ease.',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.blueAccent,
+                color: Colors.green[600],
               ),
             ),
             SizedBox(height: 20),
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                       padding:
                           EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                       textStyle: TextStyle(fontSize: 18),
-                      backgroundColor: Colors.teal,
+                      backgroundColor: Colors.green[700],
                     ),
                   ),
                 ],

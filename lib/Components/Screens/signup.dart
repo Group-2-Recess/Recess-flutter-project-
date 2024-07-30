@@ -23,32 +23,44 @@ class _SignupState extends State<Signup> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        toolbarHeight: 50,
+        toolbarHeight: 60,
+        title: Text(
+          'Sign Up',
+          style: GoogleFonts.raleway(
+            textStyle: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Text(
-                  'Register Account',
+                  'Create Your Account',
                   style: GoogleFonts.raleway(
-                    textStyle: const TextStyle(
+                    textStyle: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
-                      fontSize: 32,
+                      fontSize: 28,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 80),
+              const SizedBox(height: 40),
               _emailAddress(),
               const SizedBox(height: 20),
               _password(),
               const SizedBox(height: 20),
               _roleDropdown(),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
               _signup(context),
             ],
           ),
@@ -59,35 +71,35 @@ class _SignupState extends State<Signup> {
 
   Widget _emailAddress() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Email Address',
           style: GoogleFonts.raleway(
-            textStyle: const TextStyle(
+            textStyle: TextStyle(
               color: Colors.black,
-              fontWeight: FontWeight.normal,
+              fontWeight: FontWeight.w600,
               fontSize: 16,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         TextField(
           controller: _emailController,
           decoration: InputDecoration(
             filled: true,
             hintText: 'Enter your email',
-            hintStyle: const TextStyle(
-              color: Color(0xff6A6A6A),
+            hintStyle: TextStyle(
+              color: Colors.grey[600],
               fontWeight: FontWeight.normal,
               fontSize: 14,
             ),
-            fillColor: const Color(0xffF7F7F9),
+            fillColor: Colors.green[50],
             border: OutlineInputBorder(
               borderSide: BorderSide.none,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -96,30 +108,30 @@ class _SignupState extends State<Signup> {
 
   Widget _password() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Password',
           style: GoogleFonts.raleway(
-            textStyle: const TextStyle(
+            textStyle: TextStyle(
               color: Colors.black,
-              fontWeight: FontWeight.normal,
+              fontWeight: FontWeight.w600,
               fontSize: 16,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         TextField(
           controller: _passwordController,
           obscureText: true,
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xffF7F7F9),
+            fillColor: Colors.green[50],
             border: OutlineInputBorder(
               borderSide: BorderSide.none,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -128,20 +140,19 @@ class _SignupState extends State<Signup> {
 
   Widget _roleDropdown() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Role',
           style: GoogleFonts.raleway(
-            textStyle: const TextStyle(
+            textStyle: TextStyle(
               color: Colors.black,
-              fontWeight: FontWeight.normal,
+              fontWeight: FontWeight.w600,
               fontSize: 16,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           value: _role,
           items: [
@@ -155,11 +166,12 @@ class _SignupState extends State<Signup> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xffF7F7F9),
+            fillColor: Colors.green[50],
             border: OutlineInputBorder(
               borderSide: BorderSide.none,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -169,12 +181,13 @@ class _SignupState extends State<Signup> {
   Widget _signup(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xff0D6EFD),
+        backgroundColor: Colors.green,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
         ),
-        minimumSize: const Size(double.infinity, 60),
+        minimumSize: Size(double.infinity, 60),
         elevation: 0,
+        padding: EdgeInsets.symmetric(vertical: 14),
       ),
       onPressed: () async {
         await AuthService().signup(
@@ -184,7 +197,14 @@ class _SignupState extends State<Signup> {
           role: _role,
         );
       },
-      child: const Text("Sign Up"),
+      child: Text(
+        "Sign Up",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
     );
   }
 
@@ -195,19 +215,19 @@ class _SignupState extends State<Signup> {
         textAlign: TextAlign.center,
         text: TextSpan(
           children: [
-            const TextSpan(
-              text: "Already Have Account? ",
+            TextSpan(
+              text: "Already have an account? ",
               style: TextStyle(
-                color: Color(0xff6A6A6A),
+                color: Colors.grey[600],
                 fontWeight: FontWeight.normal,
                 fontSize: 16,
               ),
             ),
             TextSpan(
               text: "Log In",
-              style: const TextStyle(
-                color: Color(0xff1A1D1E),
-                fontWeight: FontWeight.normal,
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
               recognizer: TapGestureRecognizer()

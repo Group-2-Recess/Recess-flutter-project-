@@ -1,145 +1,102 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-enum VerificationStatus {
-  pending,
-  completed,
-  failed,
-}
+import 'alarm_model.dart'; // Ensure to import your Alarm model
+import 'reminder.dart'; // Ensure to import your Reminder model
 
 class Medication {
   String id;
-  final String caregiverId; // Used instead of profileId
-  String userId;
-  String patientId; // New field added
-  String sicknessName;
-  String medicationName;
-  String prescription;
-  List<MedicationTime> alarms;
-  bool isVerified;
-  DateTime verificationDate;
+  final String name;
+  final String diagnosis;
+  final String prescription;
+  final String dosage;
+  final String frequency;
+  final String instructions;
+  final List<Alarm> alarms;
+  final List<Reminder> reminders; // Changed to List<Reminder>
+  final bool verificationStatus;
+  final DateTime verificationDate;
 
   Medication({
     required this.id,
-    required this.userId,
-    required this.caregiverId, // Used instead of profileId
-    required this.patientId, // New field added
-    required this.sicknessName,
-    required this.medicationName,
+    required this.name,
+    required this.diagnosis,
     required this.prescription,
+    required this.dosage,
+    required this.frequency,
+    required this.instructions,
     required this.alarms,
-    required this.isVerified,
+    required this.reminders,
+    required this.verificationStatus,
     required this.verificationDate,
   });
 
+  // Factory constructor to create a Medication instance from a JSON object
   factory Medication.fromJson(Map<String, dynamic> json) {
     return Medication(
-      id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      caregiverId: json['caregiverId'] ?? '', // Used instead of profileId
-      patientId: json['patientId'] ?? '', // New field added
-      sicknessName: json['sicknessName'] ?? '',
-      medicationName: json['medicationName'] ?? '',
-      prescription: json['prescription'] ?? '',
+      id: json['id'] as String,
+      name: json['name'] as String,
+      diagnosis: json['diagnosis'] as String,
+      prescription: json['prescription'] as String,
+      dosage: json['dosage'] as String,
+      frequency: json['frequency'] as String,
+      instructions: json['instructions'] as String,
       alarms: (json['alarms'] as List<dynamic>?)
-              ?.map((e) => MedicationTime.fromJson(e as Map<String, dynamic>))
+              ?.map((alarm) => Alarm.fromMap(alarm as Map<String, dynamic>))
               .toList() ??
-          [],
-      isVerified: json['isVerified'] ?? false,
-      verificationDate: json['verificationDate'] != null
-          ? DateTime.parse(json['verificationDate'])
-          : DateTime.now(), // Default to now if date is null
+          [], // Handle null case
+      reminders: (json['reminders'] as List<dynamic>?)
+              ?.map((reminder) =>
+                  Reminder.fromJson(reminder as Map<String, dynamic>))
+              .toList() ??
+          [], // Handle null case
+      verificationStatus: json['verificationStatus'] as bool? ?? false,
+      verificationDate:
+          (json['verificationDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  factory Medication.fromFirestore(DocumentSnapshot doc) {
-    final data =
-        doc.data() as Map<String, dynamic>; // Cast to Map<String, dynamic>
-    return Medication(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      caregiverId: data['caregiverId'] ?? '', // Used instead of profileId
-      patientId: data['patientId'] ?? '', // New field added
-      sicknessName: data['sicknessName'] ?? '',
-      medicationName: data['medicationName'] ?? '',
-      prescription: data['prescription'] ?? '',
-      alarms: (data['alarms'] as List<dynamic>?)
-              ?.map((e) => MedicationTime.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      isVerified: data['isVerified'] ?? false,
-      verificationDate: data['verificationDate'] != null
-          ? DateTime.parse(data['verificationDate'])
-          : DateTime.now(), // Default to now if date is null
-    );
-  }
-
+  // Convert a Medication instance to a JSON object
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'userId': userId,
-      'caregiverId': caregiverId, // Used instead of profileId
-      'patientId': patientId, // New field added
-      'sicknessName': sicknessName,
-      'medicationName': medicationName,
+      'name': name,
+      'diagnosis': diagnosis,
       'prescription': prescription,
-      'alarms': alarms.map((e) => e.toJson()).toList(),
-      'isVerified': isVerified,
-      'verificationDate': verificationDate.toIso8601String(),
+      'dosage': dosage,
+      'frequency': frequency,
+      'instructions': instructions,
+      'alarms': alarms.map((alarm) => alarm.toMap()).toList(),
+      'reminders': reminders.map((reminder) => reminder.toJson()).toList(),
+      'verificationStatus': verificationStatus,
+      'verificationDate': verificationDate,
     };
   }
 
-  static VerificationStatus _parseVerificationStatus(String status) {
-    switch (status) {
-      case 'pending':
-        return VerificationStatus.pending;
-      case 'completed':
-        return VerificationStatus.completed;
-      case 'failed':
-        return VerificationStatus.failed;
-      default:
-        throw ArgumentError('Invalid verification status: $status');
-    }
-  }
-
-  static String _verificationStatusToString(VerificationStatus status) {
-    switch (status) {
-      case VerificationStatus.pending:
-        return 'pending';
-      case VerificationStatus.completed:
-        return 'completed';
-      case VerificationStatus.failed:
-        return 'failed';
-    }
-  }
-}
-
-class MedicationTime {
-  int hour;
-  int minute;
-
-  MedicationTime({required this.hour, required this.minute});
-
-  factory MedicationTime.fromJson(Map<String, dynamic> json) {
-    return MedicationTime(
-      hour: json['hour'] ?? 0,
-      minute: json['minute'] ?? 0,
+  // Create a copy of this Medication instance with optional new values
+  Medication copyWith({
+    String? id,
+    String? name,
+    String? diagnosis,
+    String? prescription,
+    String? dosage,
+    String? frequency,
+    String? instructions,
+    List<Alarm>? alarms,
+    List<Reminder>? reminders, // Updated to List<Reminder>
+    bool? verificationStatus,
+    DateTime? verificationDate,
+  }) {
+    return Medication(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      diagnosis: diagnosis ?? this.diagnosis,
+      prescription: prescription ?? this.prescription,
+      dosage: dosage ?? this.dosage,
+      frequency: frequency ?? this.frequency,
+      instructions: instructions ?? this.instructions,
+      alarms: alarms ?? this.alarms,
+      reminders: reminders ?? this.reminders, // Updated to reminders
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      verificationDate: verificationDate ?? this.verificationDate,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'hour': hour,
-      'minute': minute,
-    };
-  }
-
-  TimeOfDay toTimeOfDay() {
-    return TimeOfDay(hour: hour, minute: minute);
-  }
-
-  String format(BuildContext context) {
-    final time = TimeOfDay(hour: hour, minute: minute);
-    return time.format(context);
   }
 }
