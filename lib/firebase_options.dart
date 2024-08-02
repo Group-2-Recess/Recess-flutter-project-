@@ -51,20 +51,20 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD7SRAgMK7Z9xbpMZkiOg2LOfSy_-0LOEg',
-    appId: '1:179966136343:android:e6b9a704a25f0269b9cc52',
-    messagingSenderId: '179966136343',
-    projectId: 'firebase-auth-007',
-    storageBucket: 'firebase-auth-007.appspot.com',
+    apiKey: 'AIzaSyAMZDzYmddTzkM5QNGgmzRrtEQ4u48sbyA',
+    appId: '1:564875037088:android:c17e089bb7d47beb2abcc5',
+    messagingSenderId: '564875037088',
+    projectId: 'medical-reminder-app-8ce9e',
+    storageBucket: 'medical-reminder-app-8ce9e.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBWJ6-pXlmphU_LqhQoSD6dXT2kVee18ZU',
-    appId: '1:179966136343:ios:2f36e375879efd3fb9cc52',
-    messagingSenderId: '179966136343',
-    projectId: 'firebase-auth-007',
-    storageBucket: 'firebase-auth-007.appspot.com',
-    iosBundleId: 'com.example.authFirebase',
+    apiKey: 'AIzaSyDhPnNPn3rD_gL0HlYXwtDdoRjltwDIJVA',
+    appId: '1:564875037088:ios:082ad80b0097b45f2abcc5',
+    messagingSenderId: '564875037088',
+    projectId: 'medical-reminder-app-8ce9e',
+    storageBucket: 'medical-reminder-app-8ce9e.appspot.com',
+    iosBundleId: 'com.example.signupAndLogin',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

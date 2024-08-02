@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:medical_reminder/firebase_options.dart';
 import 'package:medical_reminder/Components/Screens/login.dart';
 import 'package:medical_reminder/Components/Screens/signup.dart';
@@ -26,6 +28,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize timezone data
+  tz.initializeTimeZones();
 
   // Initialize notifications
   const AndroidInitializationSettings initializationSettingsAndroid =

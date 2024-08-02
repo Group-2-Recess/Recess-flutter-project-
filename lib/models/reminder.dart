@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Example Reminder with time as 'HH:mm'
 class Reminder {
   final String id;
-  final String time;
+  final String time; // Format 'HH:mm'
   final List<bool> days;
   final bool enabled;
   final String sound;
