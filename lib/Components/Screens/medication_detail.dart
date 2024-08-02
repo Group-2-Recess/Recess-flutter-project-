@@ -5,6 +5,8 @@ import 'package:medical_reminder/models/medication.dart';
 import 'package:medical_reminder/models/reminder.dart';
 import 'set_reminder.dart';
 import 'patient_list.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class MedicationDetailPage extends StatefulWidget {
   final String userId;
@@ -93,6 +95,8 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
+
+    tz.initializeTimeZones();
   }
 
   Future<void> _scheduleNotification(
@@ -104,12 +108,25 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    await _flutterLocalNotificationsPlugin.show(
+    final now = DateTime.now();
+    final notificationTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(reminder.time.split(':')[0]),
+      int.parse(reminder.time.split(':')[1]),
+    );
+
+    await _flutterLocalNotificationsPlugin.zonedSchedule(
       0,
       'Medication Reminder for $patientName',
       'It\'s time for $patientName to take their medication: ${reminder.medicationName}. Address: $patientAddress',
+      tz.TZDateTime.from(notificationTime, tz.local),
       platformChannelSpecifics,
-      payload: 'item x',
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
@@ -118,8 +135,7 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
     final patient = await _firestoreService.getPatient(
         widget.caregiverId, widget.patientId);
     final patientName = patient?.name ?? "Unknown";
-    final patientAddress = patient?.address ??
-        "No address provided"; // Replace with actual address field
+    final patientAddress = patient?.address ?? "No address provided";
 
     Navigator.push(
       context,
@@ -288,10 +304,7 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
         controller: controller,
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: TextStyle(color: Colors.green[700]),
           border: OutlineInputBorder(),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -306,12 +319,15 @@ class _MedicationDetailPageState extends State<MedicationDetailPage> {
   Widget _buildElevatedButton(
       String text, Color color, VoidCallback onPressed) {
     return ElevatedButton(
-      onPressed: onPressed,
-      child: Text(text),
       style: ElevatedButton.styleFrom(
         disabledBackgroundColor: color,
         backgroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: 16.0),
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 16.0),
       ),
     );
   }

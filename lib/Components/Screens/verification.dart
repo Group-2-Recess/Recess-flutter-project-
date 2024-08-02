@@ -28,7 +28,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
   Future<void> _verifyMedication(bool isVerified) async {
     final verificationStatement =
-        '${widget.medicationName} for ${widget.patientName} has been ${isVerified ? 'verified' : 'not verified'} on ${DateTime.now().toLocal()}';
+        '${widget.medicationName} for ${widget.patientName} has been ${isVerified ? 'verified' : 'has not been verified'} on ${DateTime.now().toLocal()}';
 
     final verification = Verification(
       medicationId: widget.patientId,
