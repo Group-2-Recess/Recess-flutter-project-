@@ -1,8 +1,7 @@
-// user_details_form.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'editprofile.dart'; // Ensure you import the EditProfilePage
 
 class UserDetailsForm extends StatefulWidget {
   final String userId;
@@ -32,7 +31,18 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
         'reminder': _reminder,
         'timestamp': FieldValue.serverTimestamp(),
       };
+
+      // Save the userDetailsData to Firestore or any other database here
     }
+  }
+
+  void _navigateToEditProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(userId: widget.userId),
+      ),
+    );
   }
 
   @override
@@ -48,6 +58,12 @@ class _UserDetailsFormState extends State<UserDetailsForm> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings), // Changed icon
+            onPressed: _navigateToEditProfile,
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

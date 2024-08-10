@@ -25,7 +25,7 @@ class PatientProfile {
   }
 
   // Create a PatientProfile object from a map object
-  factory PatientProfile.fromMap(Map<String, dynamic> map) {
+  factory PatientProfile.fromMap(Map<String, dynamic> map, String userId) {
     return PatientProfile(
       id: map['id'],
       firstName: map['firstName'],
