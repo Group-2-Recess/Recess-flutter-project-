@@ -62,6 +62,15 @@ class _PrescriptionDetailsPageState extends State<PrescriptionDetailsPage> {
         'beforeLunch': _beforeLunch,
         'afterLunch': _afterLunch,
         'evening': _evening,
+
+        //'alarms': {
+          //'beforeBreakfast': _beforeBreakfast,
+          //'afterBreakfast': _afterBreakfast,
+          //'beforeLunch': _beforeLunch,
+          //'afterLunch': _afterLunch,
+          //'evening': _evening,
+        //},
+       // (corrected patient info & added newsetreminderpage)
         'timestamp': FieldValue.serverTimestamp(), // Optional: add a timestamp
       };
 

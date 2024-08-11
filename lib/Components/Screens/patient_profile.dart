@@ -8,7 +8,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:medical_reminder/models/profilemodel.dart';
 import 'package:medical_reminder/firestore_service.dart';
-import 'user_details_form.dart';
+import 'package:medical_reminder/Components/Screens/user_details_form.dart'; // Ensure correct import path
+// (corrected patient info & added newsetreminderpage)
 
 class ProfilePage extends StatefulWidget {
   @override

@@ -16,7 +16,8 @@ import 'package:medical_reminder/models/patient.dart';
 import 'package:medical_reminder/models/medication.dart';
 import 'package:medical_reminder/Components/Screens/medication_detail.dart';
 import 'package:medical_reminder/firestore_service.dart';
-import 'package:medical_reminder/components/screens/verification.dart';
+import 'package:medical_reminder/Components/Screens/verification.dart';
+      //(corrected patient info & added newsetreminderpage)
 import 'package:uuid/uuid.dart';
 import 'package:medical_reminder/Components/Screens/patient_list.dart';
 
