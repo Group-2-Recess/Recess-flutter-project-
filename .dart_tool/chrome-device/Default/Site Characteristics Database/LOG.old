@@ -1,7 +1,16 @@
-2024/08/10-06:10:22.362 1c80 Reusing MANIFEST C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.774a1118\flutter_tools_chrome_device.27270656\Default\Site Characteristics Database/MANIFEST-000001
-2024/08/10-06:10:22.364 1c80 Recovering log #10
-2024/08/10-06:10:22.367 1c80 Reusing old log C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.774a1118\flutter_tools_chrome_device.27270656\Default\Site Characteristics Database/000010.log 
-2024/08/10-06:10:22.368 1c80 Delete type=0 #3
-2024/08/10-06:10:22.368 1c80 Delete type=2 #4
-2024/08/10-06:10:22.368 1c80 Delete type=2 #6
-2024/08/10-06:10:22.368 1c80 Delete type=0 #6
+2024/08/11-00:49:30.395 1130 Log #3: 2 ops saved to Table #15 OK
+2024/08/11-00:49:30.404 1130 Archiving C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.5c526663\flutter_tools_chrome_device.af7aa425\Default\Site Characteristics Database/000003.log: OK
+2024/08/11-00:49:30.406 1130 Log #6: 2 ops saved to Table #16 OK
+2024/08/11-00:49:30.408 1130 Archiving C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.5c526663\flutter_tools_chrome_device.af7aa425\Default\Site Characteristics Database/000006.log: OK
+2024/08/11-00:49:30.411 1130 Log #10: 3 ops saved to Table #17 OK
+2024/08/11-00:49:30.412 1130 Archiving C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.5c526663\flutter_tools_chrome_device.af7aa425\Default\Site Characteristics Database/000010.log: OK
+2024/08/11-00:49:30.412 1130 Table #4: 2 entries OK
+2024/08/11-00:49:30.413 1130 Table #6: 2 entries OK
+2024/08/11-00:49:30.413 1130 Table #11: 2 entries OK
+2024/08/11-00:49:30.413 1130 Table #13: 2 entries OK
+2024/08/11-00:49:30.413 1130 Table #14: 2 entries OK
+2024/08/11-00:49:30.414 1130 Table #15: 2 entries OK
+2024/08/11-00:49:30.414 1130 Table #16: 2 entries OK
+2024/08/11-00:49:30.414 1130 Table #17: 3 entries OK
+2024/08/11-00:49:30.417 1130 Archiving C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.5c526663\flutter_tools_chrome_device.af7aa425\Default\Site Characteristics Database/MANIFEST-000001: OK
+2024/08/11-00:49:30.422 1130 **** Repaired leveldb C:\Users\DERRICK\AppData\Local\Temp\flutter_tools.5c526663\flutter_tools_chrome_device.af7aa425\Default\Site Characteristics Database; recovered 8 files; 1590 bytes. Some data may have been lost. ****

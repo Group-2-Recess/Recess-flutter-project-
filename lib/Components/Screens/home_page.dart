@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medical_reminder/Components/Screens/patient_list.dart';
 import 'package:medical_reminder/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:medical_reminder/edit_caregiver_profile.dart'; // Import the EditCaregiverProfilePage
 
 class HomePage extends StatefulWidget {
   @override
@@ -47,6 +48,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void navigateToEditProfilePage(BuildContext context) {
+    if (caregiverId.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditCaregiverProfilePage(
+            profileId: caregiverId, // Pass the caregiver ID
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No caregiver profile found.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,6 +72,14 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Home'),
         backgroundColor: Colors.green[800],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              navigateToEditProfilePage(context);
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
